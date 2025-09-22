@@ -1,0 +1,132 @@
+# Top-level .gitignore for the hospital workspace
+# Covers: medical-union (Java/Maven) and medical-union-front (Vue + TypeScript / Vite)
+
+##########################
+# Operating system files #
+##########################
+# Windows thumbnail cache, system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+@{*}
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+##########################
+# IDE / Editor files     #
+##########################
+# VS Code
+.vscode/
+.history/
+*.code-workspace
+
+# IntelliJ / IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# Mac
+.DS_Store
+
+##########################
+# Java / Maven           #
+##########################
+# Build output
+/medical-union/target/
+/medical-union/target-*/
+
+# maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Local Maven repository (if added accidentally)
+/.m2/
+
+# compiled class files
+**/target/
+**/*.class
+
+# logs
+.log
+logs/
+*.log
+
+# Spring Boot
+spring.log
+
+# application local config
+/medical-union/src/main/resources/application.yml
+/medical-union/src/main/resources/application-*.yml
+/*.local
+
+##########################
+# MyBatis / generated   #
+##########################
+# Generated sources
+/medical-union/target/generated-sources/
+
+##########################
+# Node / Frontend (Vite + Vue + TypeScript)
+##########################
+# node / npm
+/medical-union-front/node_modules/
+/medical-union-front/dist/
+
+# Vite build output
+/medical-union-front/.vite/
+
+# local env
+/medical-union-front/.env.local
+/medical-union-front/.env.*.local
+/medical-union-front/.env
+
+# lockfiles (optional: keep package-lock.json/yarn.lock if you want deterministic installs)
+# Uncomment if you prefer to ignore lockfiles
+# /medical-union-front/package-lock.json
+# /medical-union-front/yarn.lock
+
+# VS Code workspace settings for front-end
+/medical-union-front/.vscode/
+
+##########################
+# Misc / Tools           #
+##########################
+# npm debug log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dotenv
+.env
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+##########################
+# Sensitive / local files #
+##########################
+# database credentials, keystore, etc.
+**/secrets/
+**/*.jks
+**/*.p12
+**/*.pem
+
+##########################
+# Optional: IDE/run artifacts
+##########################
+# JetBrains runtime caches
+/.idea/**/workspace.xml
+
+# End of file
