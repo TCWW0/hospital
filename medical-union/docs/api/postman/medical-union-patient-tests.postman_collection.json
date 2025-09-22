@@ -1,0 +1,88 @@
+{
+  "info": {
+    "name": "Medical Union - Patient API Tests",
+    "description": "Postman collection for testing Patient APIs (create/get/update/delete/list). Requires baseUrl and optional authToken environment variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Patient",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"测试患者\",\n  \"idCard\": \"320101199001019999\",\n  \"gender\": \"M\",\n  \"birthDate\": \"1990-01-01\",\n  \"phone\": \"13800009999\",\n  \"address\": \"测试地址\",\n  \"medicalCardNo\": \"MC-TEST-001\",\n  \"emergencyContact\": \"测试家属\",\n  \"emergencyPhone\": \"13900009999\",\n  \"severityLevel\": \"MILD\",\n  \"hospitalId\": 1,\n  \"departmentId\": 1\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/patients", "host": ["{{baseUrl}}"], "path": ["api","patients"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "if (json.resultCode !== undefined) { pm.test('resultCode is 0', function () { pm.expect(json.resultCode).to.eql(0); }); }",
+              "if (json.data && json.data.id) { pm.environment.set('lastPatientId', json.data.id); pm.test('saved id', function(){ pm.expect(json.data.id).to.be.a('number'); }); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Patient by ID",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" } ],
+        "url": { "raw": "{{baseUrl}}/api/patients/{{lastPatientId}}", "host": ["{{baseUrl}}"], "path": ["api","patients","{{lastPatientId}}" ] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('status is 200', function(){ pm.response.to.have.status(200); });","var j = pm.response.json(); if(j.data){ pm.test('has data', function(){ pm.expect(j.data).to.be.an('object'); }); }"], "type":"text/javascript" } } ]
+    },
+    {
+      "name": "Update Patient",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"测试患者 更新\",\n  \"phone\": \"13811112222\",\n  \"address\": \"新的地址\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/patients/{{lastPatientId}}", "host": ["{{baseUrl}}"], "path": ["api","patients","{{lastPatientId}}"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('status is 200', function(){ pm.response.to.have.status(200); });","var json = pm.response.json(); if(json.resultCode !== undefined){ pm.test('resultCode is 0', function(){ pm.expect(json.resultCode).to.eql(0); }); }"], "type":"text/javascript" } } ]
+    },
+    {
+      "name": "Delete Patient",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" } ],
+        "url": { "raw": "{{baseUrl}}/api/patients/{{lastPatientId}}", "host": ["{{baseUrl}}"], "path": ["api","patients","{{lastPatientId}}"] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('status is 200', function(){ pm.response.to.have.status(200); });","var json = pm.response.json(); if(json.resultCode !== undefined){ pm.test('resultCode is 0 or -3', function(){ pm.expect([0, -3]).to.include(json.resultCode); }); }"], "type":"text/javascript" } } ]
+    },
+    {
+      "name": "List Patients (page)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{authToken}}", "type": "text" } ],
+        "url": { "raw": "{{baseUrl}}/api/patients?page=1&size=10", "host": ["{{baseUrl}}"], "path": ["api","patients"], "query": [ { "key": "page", "value": "1" }, { "key": "size", "value": "10" } ] }
+      },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('status is 200', function(){ pm.response.to.have.status(200); });","var j = pm.response.json(); pm.test('response has data or list', function(){ pm.expect(j).to.be.an('object'); });"], "type":"text/javascript" } } ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "authToken", "value": "" },
+    { "key": "lastPatientId", "value": "" }
+  ]
+}

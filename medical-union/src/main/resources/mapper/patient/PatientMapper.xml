@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medicalunion.patient.mapper.PatientMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="PatientResultMap" type="com.medicalunion.patient.entity.Patient">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="idCard" column="id_card"/>
+        <result property="gender" column="gender"/>
+        <result property="birthDate" column="birth_date"/>
+        <result property="phone" column="phone"/>
+        <result property="address" column="address"/>
+        <result property="medicalCardNo" column="medical_card_no"/>
+        <result property="emergencyContact" column="emergency_contact"/>
+        <result property="emergencyPhone" column="emergency_phone"/>
+        <result property="severityLevel" column="severity_level"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 基础查询字段 -->
+    <sql id="BaseColumns">
+        id, name, id_card, gender, birth_date, phone, address, 
+        medical_card_no, emergency_contact, emergency_phone, 
+        severity_level, created_at, updated_at
+    </sql>
+
+    <!-- 查询所有患者 -->
+    <select id="findAll" resultMap="PatientResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM patients 
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据ID查询患者 -->
+    <select id="findById" resultMap="PatientResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM patients 
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据身份证号查询患者 -->
+    <select id="findByIdCard" resultMap="PatientResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM patients 
+        WHERE id_card = #{idCard}
+    </select>
+
+    <!-- 分页查询患者 -->
+    <select id="findByPage" resultMap="PatientResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM patients 
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 根据姓名模糊查询患者 -->
+    <select id="findByNameLike" resultMap="PatientResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM patients 
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 插入患者 -->
+    <insert id="insert" parameterType="com.medicalunion.patient.entity.Patient" 
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO patients (
+            name, id_card, gender, birth_date, phone, address, 
+            medical_card_no, emergency_contact, emergency_phone, severity_level
+        ) VALUES (
+            #{name}, #{idCard}, #{gender}, #{birthDate}, #{phone}, #{address},
+            #{medicalCardNo}, #{emergencyContact}, #{emergencyPhone}, #{severityLevel}
+        )
+    </insert>
+
+    <!-- 存储过程：安全创建患者（CALLABLE） -->
+    <update id="safeCreatePatient" statementType="CALLABLE" parameterType="map">
+        { CALL sp_safe_create_patient(
+            #{name, mode=IN, jdbcType=VARCHAR},
+            #{idCard, mode=IN, jdbcType=VARCHAR},
+            #{gender, mode=IN, jdbcType=CHAR},
+            #{birthDate, mode=IN, jdbcType=DATE},
+            #{phone, mode=IN, jdbcType=VARCHAR},
+            #{address, mode=IN, jdbcType=VARCHAR},
+            #{medicalCardNo, mode=IN, jdbcType=VARCHAR},
+            #{emergencyContact, mode=IN, jdbcType=VARCHAR},
+            #{emergencyPhone, mode=IN, jdbcType=VARCHAR},
+            #{severityLevel, mode=IN, jdbcType=VARCHAR},
+            #{hospitalId, mode=IN, jdbcType=BIGINT},
+            #{departmentId, mode=IN, jdbcType=BIGINT},
+            #{newId, mode=OUT, jdbcType=BIGINT},
+            #{resultCode, mode=OUT, jdbcType=INTEGER},
+            #{resultMessage, mode=OUT, jdbcType=VARCHAR}
+        ) }
+    </update>
+
+    <!-- 存储过程：安全更新患者（CALLABLE） -->
+    <update id="safeUpdatePatient" statementType="CALLABLE" parameterType="map">
+        { CALL sp_safe_update_patient(
+            #{patientId, mode=IN, jdbcType=BIGINT},
+            #{name, mode=IN, jdbcType=VARCHAR},
+            #{phone, mode=IN, jdbcType=VARCHAR},
+            #{address, mode=IN, jdbcType=VARCHAR},
+            #{resultCode, mode=OUT, jdbcType=INTEGER},
+            #{resultMessage, mode=OUT, jdbcType=VARCHAR}
+        ) }
+    </update>
+
+    <!-- 存储过程：安全删除患者（CALLABLE） -->
+    <update id="safeDeletePatient" statementType="CALLABLE" parameterType="map">
+        { CALL sp_safe_delete_patient(
+            #{patientId, mode=IN, jdbcType=BIGINT},
+            #{resultCode, mode=OUT, jdbcType=INTEGER},
+            #{resultMessage, mode=OUT, jdbcType=VARCHAR}
+        ) }
+    </update>
+
+</mapper>

@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: Medical Union - Patients API
+  version: "1.0.0"
+  description: |
+    OpenAPI 3.0 specification for patient-related endpoints used by the Medical Union front-end.
+    This document is intended as the contract for frontend-backend integration and for generating mock servers / server stubs.
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production (change for your env)
+  - url: http://localhost:4000/api/v1
+    description: Local mock server (json-server/prism)
+paths:
+  /patients:
+    get:
+      summary: List patients (paged, filterable)
+      description: Returns a paginated list of patients. Supports search, status, triage, department filters and sorting.
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Free-text search over name/phone/id
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [all, ongoing, completed]
+        - in: query
+          name: triage
+          schema:
+            type: string
+            enum: [all, high, medium, low]
+        - in: query
+          name: department
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+            example: lastVisit:desc
+      responses:
+        '200':
+          description: Paginated patients list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPatients'
+    post:
+      summary: Create a new patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+  /patients/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get patient by id
+      responses:
+        '200':
+          description: Patient object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update patient by id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+    delete:
+      summary: Delete patient by id
+      responses:
+        '204':
+          description: Deleted
+  /patients/{id}/visits:
+    get:
+      summary: List visits for a patient
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Visits list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Visit'
+components:
+  schemas:
+    Patient:
+      type: object
+      properties:
+        id:
+          type: string
+          example: p1
+        name:
+          type: string
+          example: 张三
+        age:
+          type: integer
+          example: 45
+        gender:
+          type: string
+          enum: [M, F, O]
+          example: M
+        phone:
+          type: string
+          example: 13800000001
+        lastVisit:
+          type: string
+          format: date-time
+          example: 2025-09-18T10:00:00Z
+        department:
+          type: string
+          example: 内科
+        triage:
+          type: string
+          enum: [high, medium, low]
+          example: high
+        status:
+          type: string
+          enum: [ongoing, completed]
+          example: ongoing
+        unreadMessages:
+          type: integer
+          example: 2
+      required: [id, name, age, gender, triage, status]
+    PatientCreate:
+      type: object
+      properties:
+        name: { type: string }
+        age: { type: integer }
+        gender: { type: string, enum: [M, F, O] }
+        phone: { type: string }
+        department: { type: string }
+        triage: { type: string, enum: [high, medium, low] }
+        status: { type: string, enum: [ongoing, completed] }
+      required: [name, age, gender]
+    PatientUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        age: { type: integer }
+        gender: { type: string }
+        phone: { type: string }
+        department: { type: string }
+        triage: { type: string }
+        status: { type: string }
+    Visit:
+      type: object
+      properties:
+        id: { type: string }
+        patientId: { type: string }
+        date: { type: string, format: date-time }
+        reason: { type: string }
+        doctor: { type: string }
+    PaginatedPatients:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 120
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Patient'
+    Error:
+      type: object
+      properties:
+        code: { type: integer, example: 404 }
+        message: { type: string, example: "Not found" }
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

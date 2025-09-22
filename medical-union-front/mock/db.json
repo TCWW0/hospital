@@ -1,0 +1,19 @@
+{
+  "patients": [
+    { "id": "p1", "name": "张三", "age": 45, "gender": "M", "phone": "13800000001", "lastVisit": "2025-09-18T10:00:00Z", "department": "内科", "triage": "high", "status": "ongoing", "unreadMessages": 2 },
+    { "id": "p2", "name": "李四", "age": 32, "gender": "F", "phone": "13800000002", "lastVisit": "2025-09-16T09:30:00Z", "department": "外科", "triage": "medium", "status": "ongoing", "unreadMessages": 0 },
+    { "id": "p3", "name": "王五", "age": 54, "gender": "M", "phone": "13800000003", "lastVisit": "2025-08-01T14:20:00Z", "department": "心内科", "triage": "low", "status": "completed", "unreadMessages": 1 },
+    { "id": "p4", "name": "赵六", "age": 29, "gender": "F", "phone": "13800000004", "lastVisit": "2025-09-20T11:10:00Z", "department": "儿科", "triage": "medium", "status": "ongoing", "unreadMessages": 0 },
+    { "id": "p5", "name": "孙七", "age": 67, "gender": "M", "phone": "13800000005", "lastVisit": "2025-09-10T08:00:00Z", "department": "内科", "triage": "high", "status": "ongoing", "unreadMessages": 4 },
+    { "id": "p6", "name": "周八", "age": 40, "gender": "F", "phone": "13800000006", "lastVisit": "2025-07-22T13:00:00Z", "department": "皮肤科", "triage": "low", "status": "completed", "unreadMessages": 0 },
+    { "id": "p7", "name": "吴九", "age": 52, "gender": "M", "phone": "13800000007", "lastVisit": "2025-09-19T15:45:00Z", "department": "神经内科", "triage": "medium", "status": "ongoing", "unreadMessages": 3 },
+    { "id": "p8", "name": "郑十", "age": 23, "gender": "F", "phone": "13800000008", "lastVisit": "2025-09-01T10:15:00Z", "department": "耳鼻喉科", "triage": "low", "status": "ongoing", "unreadMessages": 0 },
+    { "id": "p9", "name": "钱十一", "age": 36, "gender": "M", "phone": "13800000009", "lastVisit": "2025-09-05T09:00:00Z", "department": "泌尿科", "triage": "medium", "status": "ongoing", "unreadMessages": 1 },
+    { "id": "p10", "name": "周十二", "age": 48, "gender": "F", "phone": "13800000010", "lastVisit": "2025-09-02T16:30:00Z", "department": "肿瘤科", "triage": "high", "status": "ongoing", "unreadMessages": 0 }
+  ],
+  "visits": [
+    { "id": "v1", "patientId": "p1", "date": "2025-09-18T10:00:00Z", "reason": "复诊", "doctor": "李医生" },
+    { "id": "v2", "patientId": "p1", "date": "2024-11-01T09:00:00Z", "reason": "体检", "doctor": "王医生" },
+    { "id": "v3", "patientId": "p2", "date": "2025-09-16T09:30:00Z", "reason": "手术随访", "doctor": "赵医生" }
+  ]
+}

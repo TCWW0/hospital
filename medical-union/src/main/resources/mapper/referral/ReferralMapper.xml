@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medicalunion.referral.mapper.ReferralMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ReferralResultMap" type="com.medicalunion.referral.entity.Referral">
+        <id property="id" column="id"/>
+        <result property="patientId" column="patient_id"/>
+        <result property="fromDoctorId" column="from_doctor_id"/>
+        <result property="toDoctorId" column="to_doctor_id"/>
+        <result property="fromHospitalId" column="from_hospital_id"/>
+        <result property="toHospitalId" column="to_hospital_id"/>
+        <result property="referralReason" column="referral_reason"/>
+        <result property="referralType" column="referral_type"/>
+        <result property="priority" column="priority"/>
+        <result property="status" column="status"/>
+        <result property="referralDate" column="referral_date"/>
+        <result property="expectedDate" column="expected_date"/>
+        <result property="approvalDate" column="approval_date"/>
+        <result property="completionDate" column="completion_date"/>
+        <result property="notes" column="notes"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <!-- 关联信息 -->
+        <result property="patientName" column="patient_name"/>
+        <result property="fromDoctorName" column="from_doctor_name"/>
+        <result property="toDoctorName" column="to_doctor_name"/>
+        <result property="fromHospitalName" column="from_hospital_name"/>
+        <result property="toHospitalName" column="to_hospital_name"/>
+    </resultMap>
+
+    <!-- 基础查询字段 -->
+    <sql id="BaseColumns">
+        r.id, r.patient_id, r.from_doctor_id, r.to_doctor_id, 
+        r.from_hospital_id, r.to_hospital_id, r.referral_reason, 
+        r.referral_type, r.priority, r.status, r.referral_date, 
+        r.expected_date, r.approval_date, r.completion_date, 
+        r.notes, r.created_at, r.updated_at
+    </sql>
+
+    <!-- 关联查询字段 -->
+    <sql id="JoinColumns">
+        <include refid="BaseColumns"/>,
+        p.name as patient_name,
+        fd.name as from_doctor_name,
+        td.name as to_doctor_name,
+        fh.name as from_hospital_name,
+        th.name as to_hospital_name
+    </sql>
+
+    <!-- 关联查询 -->
+    <sql id="JoinTables">
+        FROM referrals r
+        LEFT JOIN patients p ON r.patient_id = p.id
+        LEFT JOIN doctors fd ON r.from_doctor_id = fd.id
+        LEFT JOIN doctors td ON r.to_doctor_id = td.id
+        LEFT JOIN hospitals fh ON r.from_hospital_id = fh.id
+        LEFT JOIN hospitals th ON r.to_hospital_id = th.id
+    </sql>
+
+    <!-- 查询所有转诊记录 -->
+    <select id="findAll" resultMap="ReferralResultMap">
+        SELECT <include refid="JoinColumns"/>
+        <include refid="JoinTables"/>
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 根据ID查询转诊记录 -->
+    <select id="findById" resultMap="ReferralResultMap">
+        SELECT <include refid="JoinColumns"/>
+        <include refid="JoinTables"/>
+        WHERE r.id = #{id}
+    </select>
+
+    <!-- 根据患者ID查询转诊记录 -->
+    <select id="findByPatientId" resultMap="ReferralResultMap">
+        SELECT <include refid="JoinColumns"/>
+        <include refid="JoinTables"/>
+        WHERE r.patient_id = #{patientId}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 根据转出医生ID查询转诊记录 -->
+    <select id="findByFromDoctorId" resultMap="ReferralResultMap">
+        SELECT <include refid="JoinColumns"/>
+        <include refid="JoinTables"/>
+        WHERE r.from_doctor_id = #{fromDoctorId}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 根据转入医生ID查询转诊记录 -->
+    <select id="findByToDoctorId" resultMap="ReferralResultMap">
+        SELECT <include refid="JoinColumns"/>
+        <include refid="JoinTables"/>
+        WHERE r.to_doctor_id = #{toDoctorId}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 根据状态查询转诊记录 -->
+    <select id="findByStatus" resultMap="ReferralResultMap">
+        SELECT <include refid="JoinColumns"/>
+        <include refid="JoinTables"/>
+        WHERE r.status = #{status}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 根据医院查询转诊记录 -->
+    <select id="findByHospitalId" resultMap="ReferralResultMap">
+        SELECT <include refid="JoinColumns"/>
+        <include refid="JoinTables"/>
+        WHERE r.from_hospital_id = #{hospitalId} OR r.to_hospital_id = #{hospitalId}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 插入转诊记录 -->
+    <insert id="insert" parameterType="com.medicalunion.referral.entity.Referral" 
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO referrals (
+            patient_id, from_doctor_id, to_doctor_id, from_hospital_id, to_hospital_id,
+            referral_reason, referral_type, priority, status, referral_date, expected_date, notes
+        ) VALUES (
+            #{patientId}, #{fromDoctorId}, #{toDoctorId}, #{fromHospitalId}, #{toHospitalId},
+            #{referralReason}, #{referralType}, #{priority}, #{status}, #{referralDate}, 
+            #{expectedDate}, #{notes}
+        )
+    </insert>
+
+</mapper>
