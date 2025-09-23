@@ -37,12 +37,6 @@ public interface PatientMapper {
      * 根据姓名模糊查询患者
      */
     List<Patient> findByNameLike(@Param("name") String name);
-    
-    /**
-     * 插入患者
-     */
-    @Options(useGeneratedKeys = true, keyProperty = "id")
-    int insert(Patient patient);
 
     /**
      * 调用存储过程安全创建患者
@@ -63,6 +57,5 @@ public interface PatientMapper {
     /**
      * 统计患者总数
      */
-    @Select("SELECT COUNT(*) FROM patients")
     long count();
 }

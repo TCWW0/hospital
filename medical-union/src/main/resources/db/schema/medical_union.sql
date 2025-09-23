@@ -11,7 +11,7 @@
  Target Server Version : 80040 (8.0.40)
  File Encoding         : 65001
 
- Date: 22/09/2025 13:13:53
+ Date: 23/09/2025 06:25:22
 */
 
 SET NAMES utf8mb4;
@@ -30,11 +30,17 @@ CREATE TABLE `audit_logs`  (
   `details` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of audit_logs
 -- ----------------------------
+INSERT INTO `audit_logs` VALUES (1, NULL, 'CREATE_PATIENT', 'patients', 2, 'Created patient id=2', '2025-09-22 13:54:00');
+INSERT INTO `audit_logs` VALUES (2, NULL, 'CREATE_PATIENT', 'patients', 3, 'Created patient id=3', '2025-09-22 13:54:49');
+INSERT INTO `audit_logs` VALUES (3, NULL, 'UPDATE_PATIENT', 'patients', 2, 'Updated patient id=2', '2025-09-22 14:17:40');
+INSERT INTO `audit_logs` VALUES (4, NULL, 'UPDATE_PATIENT', 'patients', 2, 'Updated patient id=2', '2025-09-22 14:19:18');
+INSERT INTO `audit_logs` VALUES (5, NULL, 'DELETE_PATIENT', 'patients', 3, 'Deleted patient id=3', '2025-09-22 14:23:09');
+INSERT INTO `audit_logs` VALUES (6, NULL, 'DELETE_PATIENT', 'patients', 2, 'Deleted patient id=2', '2025-09-22 14:24:06');
 
 -- ----------------------------
 -- Table structure for departments
@@ -130,7 +136,7 @@ CREATE TABLE `patients`  (
   INDEX `idx_patients_phone`(`phone` ASC) USING BTREE,
   CONSTRAINT `patients_ibfk_1` FOREIGN KEY (`hospital_id`) REFERENCES `hospitals` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `patients_ibfk_2` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of patients
@@ -262,19 +268,157 @@ CREATE TABLE `visits`  (
 -- ----------------------------
 
 -- ----------------------------
+-- Procedure structure for sp_safe_create_patient
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `sp_safe_create_patient`;
+delimiter ;;
+CREATE PROCEDURE `sp_safe_create_patient`(IN p_name VARCHAR(255),
+  IN p_id_card VARCHAR(64),
+  IN p_gender CHAR(1),
+  IN p_birth_date DATE,
+  IN p_phone VARCHAR(64),
+  IN p_address VARCHAR(512),
+  IN p_medical_card_no VARCHAR(128),
+  IN p_emergency_contact VARCHAR(255),
+  IN p_emergency_phone VARCHAR(64),
+  IN p_severity_level VARCHAR(16),
+  IN p_hospital_id BIGINT,
+  IN p_department_id BIGINT,
+  OUT p_new_id BIGINT,
+  OUT p_result_code INT,
+  OUT p_result_message VARCHAR(255))
+proc_block: BEGIN   -- <<< 定义一个可 LEAVE 的标签 block
+  DECLARE v_exists INT DEFAULT 0;
+
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    GET DIAGNOSTICS CONDITION 1
+      @sqlstate = RETURNED_SQLSTATE, @msg = MESSAGE_TEXT;
+    SET p_result_code = -1;
+    SET p_result_message = CONCAT('SQLSTATE=', @sqlstate, ' MSG=', @msg);
+  END;
+
+  START TRANSACTION;
+
+  -- 如果传入了身份证号，检查是否已存在（避免重复创建）
+  IF p_id_card IS NOT NULL AND TRIM(p_id_card) <> '' THEN
+    SELECT COUNT(*) INTO v_exists FROM patients WHERE id_card = p_id_card;
+    IF v_exists > 0 THEN
+      ROLLBACK;
+      SET p_result_code = -4;
+      SET p_result_message = 'Duplicate id_card';
+      LEAVE proc_block;  -- <<< 跳出整个存储过程
+    END IF;
+  END IF;
+
+  INSERT INTO patients (
+    name, id_card, gender, birth_date, phone, address, medical_history,
+    severity_level, hospital_id, department_id, created_at
+  )
+  VALUES (
+    p_name, p_id_card, p_gender, p_birth_date, p_phone, p_address, NULL,
+    p_severity_level, p_hospital_id, p_department_id, CURRENT_TIMESTAMP
+  );
+
+  SET p_new_id = LAST_INSERT_ID();
+
+  INSERT INTO audit_logs(user_id, action, target_table, target_id, details)
+  VALUES (NULL, 'CREATE_PATIENT', 'patients', p_new_id, CONCAT('Created patient id=', p_new_id));
+
+  COMMIT;
+  SET p_result_code = 0;
+  SET p_result_message = 'OK';
+
+END proc_block
+;;
+delimiter ;
+
+-- ----------------------------
 -- Procedure structure for sp_safe_delete_patient
 -- ----------------------------
 DROP PROCEDURE IF EXISTS `sp_safe_delete_patient`;
 delimiter ;;
-CREATE PROCEDURE `sp_safe_delete_patient`(IN p_patient_id BIGINT)
+CREATE PROCEDURE `sp_safe_delete_patient`(IN p_patient_id BIGINT,
+  OUT p_result_code INT,
+  OUT p_result_message VARCHAR(255))
 BEGIN
   DECLARE v_cnt INT DEFAULT 0;
+
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    GET DIAGNOSTICS CONDITION 1
+      @sqlstate = RETURNED_SQLSTATE, @msg = MESSAGE_TEXT;
+    SET p_result_code = -1;
+    SET p_result_message = CONCAT('SQLSTATE=', @sqlstate, ' MSG=', @msg);
+  END;
+
+  START TRANSACTION;
   SELECT COUNT(*) INTO v_cnt FROM visits WHERE patient_id = p_patient_id;
+
   IF v_cnt > 0 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot delete patient with visits';
+    ROLLBACK;
+    SET p_result_code = -3;
+    SET p_result_message = 'Cannot delete patient with visits';
   ELSE
     DELETE FROM patients WHERE id = p_patient_id;
-    INSERT INTO audit_logs(user_id, action, target_table, target_id, details) VALUES (NULL, 'DELETE_PATIENT', 'patients', p_patient_id, CONCAT('Deleted patient id=', p_patient_id));
+
+    INSERT INTO audit_logs(user_id, action, target_table, target_id, details)
+    VALUES (NULL, 'DELETE_PATIENT', 'patients', p_patient_id, CONCAT('Deleted patient id=', p_patient_id));
+
+    COMMIT;
+    SET p_result_code = 0;
+    SET p_result_message = 'OK';
+  END IF;
+END
+;;
+delimiter ;
+
+-- ----------------------------
+-- Procedure structure for sp_safe_update_patient
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `sp_safe_update_patient`;
+delimiter ;;
+CREATE PROCEDURE `sp_safe_update_patient`(IN p_patient_id BIGINT,
+  IN p_name VARCHAR(255),
+  IN p_phone VARCHAR(64),
+  IN p_address VARCHAR(512),
+  OUT p_result_code INT,
+  OUT p_result_message VARCHAR(255))
+BEGIN
+  DECLARE v_exists INT DEFAULT 0;
+
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    GET DIAGNOSTICS CONDITION 1
+      @sqlstate = RETURNED_SQLSTATE, @msg = MESSAGE_TEXT;
+    SET p_result_code = -1;
+    SET p_result_message = CONCAT('SQLSTATE=', @sqlstate, ' MSG=', @msg);
+  END;
+
+  START TRANSACTION;
+  SELECT COUNT(*) INTO v_exists FROM patients WHERE id = p_patient_id;
+
+  IF v_exists = 0 THEN
+    ROLLBACK;
+    SET p_result_code = -2;
+    SET p_result_message = 'Patient not found';
+  ELSE
+    UPDATE patients
+    SET name = p_name,
+        phone = p_phone,
+        address = p_address,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = p_patient_id;
+
+    INSERT INTO audit_logs(user_id, action, target_table, target_id, details)
+    VALUES (NULL, 'UPDATE_PATIENT', 'patients', p_patient_id, CONCAT('Updated patient id=', p_patient_id));
+
+    COMMIT;
+    SET p_result_code = 0;
+    SET p_result_message = 'OK';
   END IF;
 END
 ;;

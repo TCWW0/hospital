@@ -42,7 +42,7 @@ const info = mockPatientDashboard;
 
 <style scoped lang="less">
 .patient-dashboard {
-  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+  background: transparent;
   min-height: 100vh;
   padding: 24px;
 

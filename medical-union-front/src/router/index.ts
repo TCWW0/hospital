@@ -57,6 +57,12 @@ const routes: Array<RouteRecordRaw> = [
         }
       },
       {
+        path: 'telemedicine',
+        name: 'DoctorTelemedicine',
+        component: () => import('@/views/doctor/TelemedicineList.vue'),
+        meta: { title: '远程医疗申请', requiresAuth: true, roles: ['DOCTOR'] }
+      },
+      {
         path: 'statistics',
         name: 'DoctorStatistics',
         component: () => import('@/views/doctor/Statistics.vue'),
@@ -117,6 +123,67 @@ const routes: Array<RouteRecordRaw> = [
           requiresAuth: true,
           roles: ['PATIENT']
         }
+      }
+      ,
+      {
+        path: 'hospitals',
+        name: 'HospitalList',
+        component: () => import('@/views/patient/HospitalList.vue'),
+        meta: { title: '医院列表', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'hospital',
+        name: 'HospitalOverview',
+        component: () => import('@/views/patient/HospitalDetail.vue'),
+        meta: { title: '医院', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'hospital/:id',
+        name: 'HospitalDetail',
+        component: () => import('@/views/patient/HospitalDetail.vue'),
+        meta: { title: '医院详情', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'doctors',
+        name: 'DoctorList',
+        component: () => import('@/views/patient/DoctorList.vue'),
+        meta: { title: '医生查询', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'doctor/:id',
+        name: 'DoctorDetail',
+        component: () => import('@/views/patient/DoctorDetail.vue'),
+        meta: { title: '医生详情', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'doctor/:id/schedule',
+        name: 'DoctorSchedule',
+        component: () => import('@/views/patient/DoctorSchedule.vue'),
+        meta: { title: '医生排班', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'appointment/confirm',
+        name: 'AppointmentConfirm',
+        component: () => import('@/views/patient/AppointmentConfirm.vue'),
+        meta: { title: '挂号确认', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'appointment/voucher/:id',
+        name: 'AppointmentVoucher',
+        component: () => import('@/views/patient/AppointmentVoucher.vue'),
+        meta: { title: '挂号凭证', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'appointments',
+        name: 'MyAppointments',
+        component: () => import('@/views/patient/MyAppointments.vue'),
+        meta: { title: '我的预约', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'telemedicine/apply',
+        name: 'TelemedicineApply',
+        component: () => import('@/views/patient/TelemedicineApply.vue'),
+        meta: { title: '申请远程医疗', requiresAuth: true, roles: ['PATIENT'] }
       }
     ]
   },

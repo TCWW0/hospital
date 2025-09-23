@@ -19,6 +19,8 @@
     <description>Medical Union Management System</description>
 
     <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <java.version>17</java.version>
         <mybatis.version>2.3.1</mybatis.version>
         <mysql.version>8.0.33</mysql.version>

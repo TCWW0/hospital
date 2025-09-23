@@ -44,6 +44,22 @@
             <IconSwap />
             <span>转诊管理</span>
           </a-menu-item>
+          <a-menu-item key="hospitals" @click="$router.push('/patient/hospitals')">
+            <IconHome />
+            <span>医院列表</span>
+          </a-menu-item>
+          <a-menu-item key="doctors" @click="$router.push('/patient/doctors')">
+            <IconUser />
+            <span>医生查询</span>
+          </a-menu-item>
+          <a-menu-item key="appointments" @click="$router.push('/patient/appointments')">
+            <IconFile />
+            <span>我的预约</span>
+          </a-menu-item>
+          <a-menu-item key="telemedicine" @click="$router.push('/patient/telemedicine/apply')">
+            <IconHeart />
+            <span>远程医疗</span>
+          </a-menu-item>
           <a-menu-item key="statistics" @click="$router.push('/doctor/statistics')">
             <IconBarChart />
             <span>数据统计</span>
@@ -116,11 +132,17 @@ import {
   IconDown,
   IconSettings,
   IconPoweroff
-} from '@arco-design/web-vue/es/icon';
+ } from '@arco-design/web-vue/es/icon';
+ import { IconUserGroup, IconFile, IconMobile } from '@arco-design/web-vue/es/icon';
 
 const router = useRouter();
 const route = useRoute();
 const collapsed = ref(false);
+
+// ensure imported icons are referenced so TypeScript doesn't warn
+void IconUserGroup;
+void IconFile;
+void IconMobile;
 
 // 从 mockData 获取医院信息（临时）
 const hospitalInfo = computed(() => {
@@ -153,25 +175,24 @@ const currentRoute = computed(() => {
   if (path.includes('/patients')) return 'patients';
   if (path.includes('/referrals')) return 'referrals';
   if (path.includes('/statistics')) return 'statistics';
+  if (path.includes('/hospital')) return 'hospital';
   return 'dashboard';
 });
-
-// 处理个人信息
-const handleProfile = () => {
-  Message.info('个人信息功能即将推出');
-};
-
-// 处理设置
-const handleSettings = () => {
-  Message.info('设置功能即将推出');
-};
-
 // 处理退出登录
 const handleLogout = () => {
   localStorage.removeItem('medical_union_token');
   localStorage.removeItem('medical_union_user');
   Message.success('已退出登录');
   router.push('/login');
+};
+
+// 占位：个人信息与设置（后续可替换为真实行为）
+const handleProfile = () => {
+  Message.info('个人信息功能将在后续发布');
+};
+
+const handleSettings = () => {
+  Message.info('设置功能将在后续发布');
 };
 
 onMounted(() => {

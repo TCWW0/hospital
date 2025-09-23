@@ -38,6 +38,22 @@
             <IconSwap />
             <span>转诊记录</span>
           </a-menu-item>
+          <a-menu-item key="hospital" @click="$router.push('/patient/hospital')">
+            <IconBarChart />
+            <span>医院</span>
+          </a-menu-item>
+          <a-menu-item key="doctors" @click="$router.push('/patient/doctors')">
+            <IconUserGroup />
+            <span>医生查询</span>
+          </a-menu-item>
+          <a-menu-item key="appointments" @click="$router.push('/patient/appointments')">
+            <IconSettings />
+            <span>我的预约</span>
+          </a-menu-item>
+          <a-menu-item key="telemedicine" @click="$router.push('/patient/telemedicine/apply')">
+            <IconMobile />
+            <span>远程医疗</span>
+          </a-menu-item>
         </a-menu>
       </a-layout-sider>
       
@@ -103,7 +119,11 @@ import {
   IconDown,
   IconPoweroff,
   IconMenuFold,
-  IconMenuUnfold
+  IconMenuUnfold,
+  IconBarChart,
+  IconUserGroup,
+  IconSettings,
+  IconMobile
 } from '@arco-design/web-vue/es/icon';
 
 const router = useRouter();
@@ -127,17 +147,27 @@ const currentRoute = computed(() => {
   if (path.includes('/profile')) return 'profile';
   if (path.includes('/visits')) return 'visits';
   if (path.includes('/referrals')) return 'referrals';
+  if (path.includes('/hospital')) return 'hospital';
+  if (path.includes('/doctors')) return 'doctors';
+  if (path.includes('/appointments')) return 'appointments';
+  if (path.includes('/telemedicine')) return 'telemedicine';
   return 'dashboard';
 });
 
 // 获取页面标题
-const getPageTitle = () => {
+  const getPageTitle = () => {
   const titles: Record<string, string> = {
     dashboard: '个人中心',
     profile: '个人信息',
     visits: '就诊记录',
     referrals: '转诊记录'
   };
+  titles.hospital = '医院';
+  titles.doctors = '医生查询';
+  titles.appointments = '我的预约';
+  titles.telemedicine = '远程医疗申请';
+  // special case: appointment voucher
+  if (route.path.includes('/patient/appointment/voucher')) return '预约凭证';
   return titles[currentRoute.value] || '个人中心';
 };
 
@@ -165,19 +195,15 @@ onMounted(() => {
 
 <style lang="less" scoped>
 .patient-center {
-  height: 100vh;
-  /* 全局渐变基底：左上到右下 */
-  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
-  position: fixed; // 固定整个布局
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden; // 防止整体滚动
+  /* 使用默认页面背景，避免全局渐变遮罩影响子页面 */
+  min-height: 100vh;
+  background: #ffffff;
+  position: relative;
+  overflow: visible;
 }
 
 .layout-sider {
-  background: rgba(255,255,255,0.9); // 半透明，让渐变透出
+  background: #ffffff; // 改为纯白色，移除透明度
   border-right: 1px solid #e5e7eb;
   transition: all 0.3s ease;
   overflow-x: hidden; // 防止水平滚动
@@ -340,7 +366,7 @@ onMounted(() => {
 }
 
 .layout-header {
-  background: rgba(255,255,255,0.92);
+  background: #ffffff;
   padding: 0 24px;
   display: flex;
   justify-content: space-between;
@@ -395,10 +421,10 @@ onMounted(() => {
 }
 
 .layout-content {
-  background: #f9fafb;
+  background: #ffffff; /* 使用纯白背景，移除浅蓝底色 */
   padding: 24px;
-  overflow-y: auto; // 仅内容区域可滚动
-  height: calc(100vh - 64px); // 减去header高度
+  overflow-y: auto; /* 仅内容区域可滚动 */
+  height: calc(100vh - 64px); /* 减去header高度 */
   position: relative;
 }
 

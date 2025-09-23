@@ -65,18 +65,6 @@
         ORDER BY created_at DESC
     </select>
 
-    <!-- 插入患者 -->
-    <insert id="insert" parameterType="com.medicalunion.patient.entity.Patient" 
-            useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO patients (
-            name, id_card, gender, birth_date, phone, address, 
-            medical_card_no, emergency_contact, emergency_phone, severity_level
-        ) VALUES (
-            #{name}, #{idCard}, #{gender}, #{birthDate}, #{phone}, #{address},
-            #{medicalCardNo}, #{emergencyContact}, #{emergencyPhone}, #{severityLevel}
-        )
-    </insert>
-
     <!-- 存储过程：安全创建患者（CALLABLE） -->
     <update id="safeCreatePatient" statementType="CALLABLE" parameterType="map">
         { CALL sp_safe_create_patient(
