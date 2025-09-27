@@ -144,6 +144,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: '医院详情', requiresAuth: true, roles: ['PATIENT'] }
       },
       {
+        path: 'hospital/:id/department/:deptId',
+        name: 'HospitalDepartmentIntro',
+        component: () => import('@/views/patient/HospitalDepartmentIntro.vue'),
+        meta: { title: '科室介绍', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
         path: 'doctors',
         name: 'DoctorList',
         component: () => import('@/views/patient/DoctorList.vue'),
@@ -178,6 +184,12 @@ const routes: Array<RouteRecordRaw> = [
         name: 'MyAppointments',
         component: () => import('@/views/patient/MyAppointments.vue'),
         meta: { title: '我的预约', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'visit/:id',
+        name: 'VisitDetail',
+        component: () => import('@/views/patient/VisitDetail.vue'),
+        meta: { title: '就诊详情', requiresAuth: true, roles: ['PATIENT'] }
       },
       {
         path: 'telemedicine/apply',

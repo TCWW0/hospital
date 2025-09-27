@@ -1,0 +1,396 @@
+{
+	"info": {
+		"_postman_id": "medical-union-auth-api",
+		"name": "Medical Union - 认证模块 API",
+		"description": "医疗联盟系统认证模块的API接口集合，包含用户注册、登录、获取用户信息等功能。\n\n**使用说明**：\n1. 导入此集合到Postman\n2. 设置环境变量（见下方环境配置）\n3. 按顺序执行：注册 → 登录 → 获取用户信息\n\n**版本**: v1.0.0\n**更新日期**: 2025-09-24",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "用户注册",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// 验证响应状态",
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"// 验证响应格式",
+							"pm.test(\"Response has correct format\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('success', true);",
+							"    pm.expect(responseJson).to.have.property('code', 0);",
+							"    pm.expect(responseJson).to.have.property('message');",
+							"    pm.expect(responseJson).to.have.property('data');",
+							"    pm.expect(responseJson.data).to.have.property('userId');",
+							"});",
+							"",
+							"// 保存用户ID供后续使用",
+							"if (pm.response.code === 201) {",
+							"    const responseJson = pm.response.json();",
+							"    pm.environment.set(\"userId\", responseJson.data.userId.toString());",
+							"    console.log(\"用户注册成功，用户ID: \" + responseJson.data.userId);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{$randomFirstName}}_{{$randomInt}}\",\n    \"password\": \"password123\",\n    \"role\": \"PATIENT\",\n    \"phone\": \"139{{$randomInt(10000000,99999999)}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/v1/auth/register",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"register"
+					]
+				},
+				"description": "用户注册接口，创建新的用户账户。\n\n**请求参数**：\n- username: 用户名（3-50字符）\n- password: 密码（6-100字符）\n- role: 用户角色（PATIENT/DOCTOR/ADMIN）\n- phone: 手机号码（11位数字）\n\n**成功响应**：\n- success: true\n- code: 0\n- data.userId: 新用户ID\n\n**可能的错误**：\n- 1001: 用户名已存在\n- 1004: 手机号已被注册"
+			},
+			"response": [
+				{
+					"name": "注册成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"zhang_san_001\",\n    \"password\": \"password123\",\n    \"role\": \"PATIENT\",\n    \"phone\": \"13912345001\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/auth/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"code\": 0,\n    \"message\": \"用户注册成功\",\n    \"data\": {\n        \"userId\": 4,\n        \"message\": \"注册成功\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "用户登录",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// 验证响应状态",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// 验证响应格式",
+							"pm.test(\"Response has correct format\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('success', true);",
+							"    pm.expect(responseJson).to.have.property('code', 0);",
+							"    pm.expect(responseJson.data).to.have.property('token');",
+							"    pm.expect(responseJson.data).to.have.property('userId');",
+							"    pm.expect(responseJson.data).to.have.property('username');",
+							"    pm.expect(responseJson.data).to.have.property('role');",
+							"});",
+							"",
+							"// 验证JWT token格式",
+							"pm.test(\"JWT token is valid format\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    const token = responseJson.data.token;",
+							"    pm.expect(token).to.be.a('string');",
+							"    pm.expect(token).to.not.be.empty;",
+							"    // JWT token应该有3个部分，用.分隔",
+							"    const parts = token.split('.');",
+							"    pm.expect(parts).to.have.lengthOf(3);",
+							"});",
+							"",
+							"// 保存JWT token供后续使用",
+							"if (pm.response.code === 200) {",
+							"    const responseJson = pm.response.json();",
+							"    pm.environment.set(\"jwt_token\", responseJson.data.token);",
+							"    pm.environment.set(\"current_username\", responseJson.data.username);",
+							"    console.log(\"登录成功，Token已保存\");",
+							"    console.log(\"用户名: \" + responseJson.data.username);",
+							"    console.log(\"角色: \" + responseJson.data.role);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"phone\": \"13912345001\",\n    \"password\": \"password123\",\n    \"userType\": \"PATIENT\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/v1/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"login"
+					]
+				},
+				"description": "用户登录接口，获取访问令牌。\n\n**请求参数**：\n- phone: 手机号码\n- password: 密码\n- userType: 用户类型（PATIENT/DOCTOR/ADMIN）\n\n**成功响应**：\n- success: true\n- code: 0\n- data.token: JWT访问令牌\n- data.userId: 用户ID\n- data.username: 用户名\n- data.role: 用户角色\n\n**可能的错误**：\n- 1101: 用户不存在\n- 1102: 密码错误\n- 1103: 用户类型不匹配"
+			},
+			"response": [
+				{
+					"name": "登录成功",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone\": \"13912345001\",\n    \"password\": \"password123\",\n    \"userType\": \"PATIENT\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"code\": 0,\n    \"message\": \"登录成功\",\n    \"data\": {\n        \"userId\": 4,\n        \"username\": \"zhang_san_001\",\n        \"role\": \"PATIENT\",\n        \"profileJson\": null,\n        \"token\": \"eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUEFUSUVOVCIsInVzZXJJZCI6NCwidXNlcm5hbWUiOiJ6aGFuZ19zYW5fMDAxIiwic3ViIjoiemhhbmdfc2FuXzAwMSIsImlhdCI6MTc1ODY5NDg0NiwiZXhwIjoxNzU4NzgxMjQ2fQ.ZoCTnUPSJsM7Gfrqkdfwe94dKQNtRD51IL0iFDYuo44UjEAQtoB3cCoDkzH6gu_Q\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "获取用户信息",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// 验证响应状态",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// 验证响应格式",
+							"pm.test(\"Response has correct format\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson).to.have.property('success', true);",
+							"    pm.expect(responseJson).to.have.property('code', 0);",
+							"    pm.expect(responseJson.data).to.have.property('userId');",
+							"    pm.expect(responseJson.data).to.have.property('username');",
+							"    pm.expect(responseJson.data).to.have.property('role');",
+							"});",
+							"",
+							"// 验证用户信息一致性",
+							"pm.test(\"User info matches login data\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    const savedUserId = pm.environment.get(\"userId\");",
+							"    const savedUsername = pm.environment.get(\"current_username\");",
+							"    ",
+							"    if (savedUserId) {",
+							"        pm.expect(responseJson.data.userId.toString()).to.equal(savedUserId);",
+							"    }",
+							"    if (savedUsername) {",
+							"        pm.expect(responseJson.data.username).to.equal(savedUsername);",
+							"    }",
+							"});",
+							"",
+							"// 输出用户信息",
+							"if (pm.response.code === 200) {",
+							"    const responseJson = pm.response.json();",
+							"    console.log(\"用户信息获取成功:\");",
+							"    console.log(\"- 用户ID: \" + responseJson.data.userId);",
+							"    console.log(\"- 用户名: \" + responseJson.data.username);",
+							"    console.log(\"- 角色: \" + responseJson.data.role);",
+							"    console.log(\"- 配置: \" + (responseJson.data.profileJson || \"未设置\"));",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}",
+						"type": "text",
+						"description": "JWT访问令牌，从登录接口获取"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/v1/auth/user/info",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"user",
+						"info"
+					]
+				},
+				"description": "获取当前登录用户的详细信息。\n\n**认证要求**：\n- 需要在请求头中携带有效的JWT Token\n- Token格式：`Authorization: Bearer {token}`\n\n**成功响应**：\n- success: true\n- code: 0\n- data.userId: 用户ID\n- data.username: 用户名\n- data.role: 用户角色\n- data.profileJson: 用户配置信息\n\n**可能的错误**：\n- 401: Token缺失、无效或过期\n- 403: Token权限不足"
+			},
+			"response": [
+				{
+					"name": "获取用户信息成功",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUEFUSUVOVCIsInVzZXJJZCI6NCwidXNlcm5hbWUiOiJ6aGFuZ19zYW5fMDAxIiwic3ViIjoiemhhbmdfc2FuXzAwMSIsImlhdCI6MTc1ODY5NDg0NiwiZXhwIjoxNzU4NzgxMjQ2fQ.ZoCTnUPSJsM7Gfrqkdfwe94dKQNtRD51IL0iFDYuo44UjEAQtoB3cCoDkzH6gu_Q"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/auth/user/info",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"user",
+								"info"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"code\": 0,\n    \"message\": \"获取用户信息成功\",\n    \"data\": {\n        \"userId\": 4,\n        \"username\": \"zhang_san_001\",\n        \"role\": \"PATIENT\",\n        \"profileJson\": null\n    }\n}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// 全局前置脚本",
+					"console.log(\"执行API请求: \" + pm.info.requestName);",
+					"console.log(\"请求URL: \" + pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// 全局后置脚本",
+					"console.log(\"响应状态: \" + pm.response.code + \" \" + pm.response.status);",
+					"console.log(\"响应时间: \" + pm.response.responseTime + \"ms\");",
+					"",
+					"// 记录错误信息",
+					"if (pm.response.code >= 400) {",
+					"    console.error(\"请求失败，响应内容:\");",
+					"    console.error(pm.response.text());",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"description": "API服务器基础URL"
+		}
+	]
+}

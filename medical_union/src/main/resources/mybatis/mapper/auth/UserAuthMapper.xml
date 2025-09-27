@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.medicalunion.auth.mapper.UserAuthMapper">
+
+  <resultMap id="UserResultMap" type="com.medicalunion.auth.model.User">
+    <id property="id" column="id" />
+    <result property="username" column="username" />
+    <result property="passwordHash" column="password_hash" />
+    <result property="role" column="role" />
+    <result property="idNumber" column="id_number" />
+    <result property="phone" column="phone" />
+    <result property="profileJson" column="profile" />
+    <result property="createdAt" column="created_at" />
+    <result property="updatedAt" column="updated_at" />
+  </resultMap>
+
+  <select id="selectUserByUsername" resultMap="UserResultMap" parameterType="string">
+    SELECT id, username, password_hash, role, id_number, phone, profile, created_at, updated_at
+    FROM user
+    WHERE username = #{username}
+  </select>
+
+  <select id="selectUserByPhone" resultMap="UserResultMap" parameterType="string">
+    SELECT id, username, password_hash, role, id_number, phone, profile, created_at, updated_at
+    FROM user
+    WHERE phone = #{phone}
+  </select>
+
+  <select id="selectUserById" resultMap="UserResultMap" parameterType="int">
+    SELECT id, username, password_hash, role, id_number, phone, profile, created_at, updated_at
+    FROM user
+    WHERE id = #{id}
+  </select>
+
+  <!-- 查询 doctors 表的 password_hash（按 doctor_code） -->
+  <select id="selectDoctorPasswordByCode" parameterType="string" resultType="string">
+    SELECT password_hash FROM doctors WHERE doctor_code = #{doctorCode} LIMIT 1
+  </select>
+
+  <update id="updateUserProfile" parameterType="map">
+    UPDATE user SET profile = #{profileJson} WHERE id = #{id}
+  </update>
+
+  <update id="updateUserPassword" parameterType="map">
+    UPDATE user SET password_hash = #{passwordHash} WHERE id = #{id}
+  </update>
+
+  <!-- SP: 更新用户资料（name/id_number/phone） -->
+  <select id="callUserUpdateProfile" statementType="CALLABLE" parameterType="map">
+    CALL sp_user_update_profile(
+      #{userId, mode=IN, jdbcType=INTEGER},
+      #{name, mode=IN, jdbcType=VARCHAR},
+      #{idNumber, mode=IN, jdbcType=VARCHAR},
+      #{phone, mode=IN, jdbcType=VARCHAR},
+      #{errcode, mode=OUT, jdbcType=INTEGER},
+      #{errmsg, mode=OUT, jdbcType=VARCHAR}
+    )
+  </select>
+
+  <!-- SP: 修改用户密码（应用层已完成 matches 校验） -->
+  <select id="callUserChangePassword" statementType="CALLABLE" parameterType="map">
+    CALL sp_user_change_password(
+      #{userId, mode=IN, jdbcType=INTEGER},
+      #{newPasswordHash, mode=IN, jdbcType=VARCHAR},
+      #{errcode, mode=OUT, jdbcType=INTEGER},
+      #{errmsg, mode=OUT, jdbcType=VARCHAR}
+    )
+  </select>
+
+  <!-- Callable for register - 适配新的存储过程参数 -->
+  <select id="callUserRegister" statementType="CALLABLE" parameterType="map">
+    CALL sp_user_register(#{username, mode=IN, jdbcType=VARCHAR}, #{passwordHash, mode=IN, jdbcType=VARCHAR}, #{role, mode=IN, jdbcType=VARCHAR}, #{phone, mode=IN, jdbcType=VARCHAR}, #{userId, mode=OUT, jdbcType=INTEGER}, #{errcode, mode=OUT, jdbcType=INTEGER}, #{errmsg, mode=OUT, jdbcType=LONGVARCHAR})
+  </select>
+
+  <!-- Callable for login - 支持用户名或手机号登录 -->
+  <select id="callUserLogin" statementType="CALLABLE" parameterType="map">
+    CALL sp_user_login(#{loginName, mode=IN, jdbcType=VARCHAR}, #{passwordHash, mode=IN, jdbcType=VARCHAR}, #{userType, mode=IN, jdbcType=VARCHAR}, #{userId, mode=OUT, jdbcType=INTEGER}, #{username, mode=OUT, jdbcType=VARCHAR}, #{role, mode=OUT, jdbcType=VARCHAR}, #{phone, mode=OUT, jdbcType=VARCHAR}, #{profileJson, mode=OUT, jdbcType=LONGVARCHAR}, #{lastLoginAt, mode=OUT, jdbcType=TIMESTAMP}, #{errcode, mode=OUT, jdbcType=INTEGER}, #{errmsg, mode=OUT, jdbcType=LONGVARCHAR})
+  </select>
+
+  <!-- Callable for simplified login SP (no password comparison inside SP) -->
+  <select id="callUserLoginSimple" statementType="CALLABLE" parameterType="map">
+    CALL sp_user_login_simple(#{loginName, mode=IN, jdbcType=VARCHAR}, #{userType, mode=IN, jdbcType=VARCHAR}, #{userId, mode=OUT, jdbcType=INTEGER}, #{username, mode=OUT, jdbcType=VARCHAR}, #{role, mode=OUT, jdbcType=VARCHAR}, #{phone, mode=OUT, jdbcType=VARCHAR}, #{profileJson, mode=OUT, jdbcType=LONGVARCHAR}, #{lastLoginAt, mode=OUT, jdbcType=TIMESTAMP}, #{errcode, mode=OUT, jdbcType=INTEGER}, #{errmsg, mode=OUT, jdbcType=LONGVARCHAR})
+  </select>
+
+  <!-- Callable for get user info -->
+  <select id="callUserGetInfo" statementType="CALLABLE" parameterType="map">
+    CALL sp_user_get_info(#{userId, mode=IN, jdbcType=INTEGER}, #{username, mode=OUT, jdbcType=VARCHAR}, #{role, mode=OUT, jdbcType=VARCHAR}, #{phone, mode=OUT, jdbcType=VARCHAR}, #{idNumber, mode=OUT, jdbcType=VARCHAR}, #{profileJson, mode=OUT, jdbcType=LONGVARCHAR}, #{createdAt, mode=OUT, jdbcType=TIMESTAMP}, #{updatedAt, mode=OUT, jdbcType=TIMESTAMP}, #{errcode, mode=OUT, jdbcType=INTEGER}, #{errmsg, mode=OUT, jdbcType=VARCHAR})
+  </select>
+
+</mapper>

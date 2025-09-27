@@ -174,7 +174,7 @@ watch(() => [route.query.hospitalId, route.query.departmentId, q.value], () => {
 .doctor-main.card-like{transition:transform .12s ease, box-shadow .12s ease}
 .doctor-main.card-like:hover{transform:translateY(-6px);box-shadow:0 12px 36px rgba(15,23,42,0.08)}
 .doctor-actions{display:flex;flex-direction:row;gap:12px;align-items:center}
-.doctor-actions >>> .arco-button{min-width:110px}
+.doctor-actions :deep(.arco-button){min-width:110px}
 .book-btn{background:#0b5fff;color:white;border-color:#0b5fff;padding:8px 14px;font-size:14px}
 .book-btn[ghost]{background:transparent}
 .toolbar .quick-search{margin-left:6px;padding:8px 14px}

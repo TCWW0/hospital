@@ -80,35 +80,37 @@
     <div class="preview-body">
       <div class="preview-row"><strong>申请详情</strong></div>
       <table class="preview-table">
-        <tr>
-          <th>就诊人</th>
-          <td>{{ previewPayload?.patientName || previewPayload?.patient?.name }}<span v-if="previewPayload?.patient?.relation">（{{ previewPayload?.patient?.relation }}）</span></td>
-        </tr>
-        <tr>
-          <th>联系方式</th>
-          <td>{{ previewPayload?.patient?.phone || previewPayload?.applicant?.phone || previewPayload?.phone }}</td>
-        </tr>
-        <tr>
-          <th>就诊方式</th>
-          <td>{{ methodLabel(previewPayload?.preferredMethod) }}</td>
-        </tr>
-        <tr>
-          <th>申请时间</th>
-          <td>{{ formatTime(previewPayload?.createdAt) }}</td>
-        </tr>
-        <tr>
-          <th>病情摘要</th>
-          <td><div class="preview-desc">{{ previewPayload?.description }}</div></td>
-        </tr>
-        <tr>
-          <th>附件</th>
-          <td>
-            <div v-if="previewPayload?.attachments?.length">
-              <div v-for="(f, i) in previewPayload.attachments" :key="i" class="preview-attach">{{ f }}</div>
-            </div>
-            <div v-else class="muted">无附件</div>
-          </td>
-        </tr>
+        <tbody>
+          <tr>
+            <th>就诊人</th>
+            <td>{{ previewPayload?.patientName || previewPayload?.patient?.name }}<span v-if="previewPayload?.patient?.relation">（{{ previewPayload?.patient?.relation }}）</span></td>
+          </tr>
+          <tr>
+            <th>联系方式</th>
+            <td>{{ previewPayload?.patient?.phone || previewPayload?.applicant?.phone || previewPayload?.phone }}</td>
+          </tr>
+          <tr>
+            <th>就诊方式</th>
+            <td>{{ methodLabel(previewPayload?.preferredMethod) }}</td>
+          </tr>
+          <tr>
+            <th>申请时间</th>
+            <td>{{ formatTime(previewPayload?.createdAt) }}</td>
+          </tr>
+          <tr>
+            <th>病情摘要</th>
+            <td><div class="preview-desc">{{ previewPayload?.description }}</div></td>
+          </tr>
+          <tr>
+            <th>附件</th>
+            <td>
+              <div v-if="previewPayload?.attachments?.length">
+                <div v-for="(f, i) in previewPayload.attachments" :key="i" class="preview-attach">{{ f }}</div>
+              </div>
+              <div v-else class="muted">无附件</div>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
     <template #footer>

@@ -3,8 +3,9 @@ export interface User {
   id: number;
   username: string;
   userType: UserType;
-  relatedId: number;
-  createdAt: string;
+  relatedId?: number;  // 可选，用于关联患者或医生ID
+  createdAt?: string;
+  profileJson?: any;   // 后端返回的附加资料字段
 }
 
 export type UserType = 'DOCTOR' | 'PATIENT' | 'ADMIN';
@@ -16,6 +17,40 @@ export interface LoginRequest {
   userType: UserType;
 }
 
+// 注册请求类型
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  role: UserType;
+  phone: string;
+}
+
+// 后端标准响应格式
+export interface BackendResponse<T = any> {
+  success: boolean;
+  code: number;
+  message: string;
+  data: T;
+}
+
+// 登录响应数据（后端格式）
+export interface LoginResponseData {
+  userId: number;
+  username: string;
+  role: UserType;
+  profileJson?: any;
+  token: string;
+}
+
+// 用户信息响应数据
+export interface UserInfoData {
+  userId: number;
+  username: string;
+  role: UserType;
+  profileJson?: any;
+}
+
+// 前端兼容的登录响应类型
 export interface LoginResponse {
   token: string;
   user: User;

@@ -1,0 +1,46 @@
+{
+  "project": "spring-petclinic-main",
+  "target": "hospital-management-system",
+  "modules": [
+    {
+      "name": "patient",
+      "domain": "Patient",
+      "entities": ["Patient", "MedicalRecord", "Appointment"],
+      "controllers": [
+        {
+          "name": "PatientController",
+          "endpoints": [
+            {"method": "GET", "path": "/patients", "queryParams": ["page","size","lastName"]},
+            {"method": "POST", "path": "/patients"},
+            {"method": "GET", "path": "/patients/{id}"},
+            {"method": "PUT", "path": "/patients/{id}"}
+          ]
+        }
+      ],
+      "services": ["PatientService"],
+      "mappers": ["PatientMapper", "AppointmentMapper"]
+    },
+    {
+      "name": "provider",
+      "domain": "Provider",
+      "entities": ["Provider","Specialty"],
+      "controllers": [
+        {"name":"ProviderController","endpoints":[{"method":"GET","path":"/providers"},{"method":"GET","path":"/providers/{id}"}]} 
+      ],
+      "services": ["ProviderService"],
+      "mappers": ["ProviderMapper"]
+    }
+  ],
+  "persistence": {
+    "type": "mybatis",
+    "config": {"mapUnderscoreToCamelCase": true, "useGeneratedKeys": true},
+    "pagination": "pagehelper or manual limit/offset"
+  },
+  "transactionBoundary": "service",
+  "validation": "jakarta-validation on DTOs",
+  "notes": [
+    "Keep service layer for transaction and orchestration",
+    "Avoid EAGER loading: use explicit queries in mappers",
+    "Use MapStruct for DTO <-> Entity mapping"
+  ]
+}

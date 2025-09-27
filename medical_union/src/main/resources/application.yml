@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/medical_union?serverTimezone=UTC&useSSL=false
+    username: root
+    password: Tcww3498
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/**/*.xml
+  type-aliases-package: com.medicalunion.auth.model
+
+# JWT配置
+jwt:
+  secret: medicalUnionSecretKeyForJWTSigningMustBeLongEnough2024
+  expiration: 86400000  # 24小时，单位毫秒

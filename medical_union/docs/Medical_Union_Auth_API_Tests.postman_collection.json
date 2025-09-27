@@ -1,0 +1,211 @@
+{
+    "info": {
+        "name": "医疗联盟系统 - 认证模块测试",
+        "description": "Medical Union System - Authentication Module API Tests",
+        "version": "1.0.0"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080"
+        },
+        {
+            "key": "jwt_token",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "1. 用户注册测试",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"username\": \"测试用户{{$randomInt}}\",\n    \"password\": \"password123\",\n    \"role\": \"PATIENT\",\n    \"phone\": \"139{{$randomInt}}{{$randomInt}}{{$randomInt}}{{$randomInt}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/auth/register",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "auth", "register"]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"注册成功\", function () {",
+                            "    pm.response.to.have.status(201);",
+                            "    var jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.code).to.eql(0);",
+                            "    pm.expect(jsonData.data.userId).to.be.a('number');",
+                            "});"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. 用户登录测试 - 使用已知用户",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type", 
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"phone\": \"13800138000\",\n    \"password\": \"password123\",\n    \"userType\": \"PATIENT\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/auth/login",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "auth", "login"]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"登录成功\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "    var jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.code).to.eql(0);",
+                            "    pm.expect(jsonData.data.token).to.be.a('string');",
+                            "    pm.expect(jsonData.data.userId).to.be.a('number');",
+                            "    ",
+                            "    // 保存token到环境变量",
+                            "    pm.environment.set('jwt_token', jsonData.data.token);",
+                            "});"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. 获取用户信息测试",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/auth/user/info",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "auth", "user", "info"]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"获取用户信息成功\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "    var jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.code).to.eql(0);",
+                            "    pm.expect(jsonData.data.userId).to.be.a('number');",
+                            "    pm.expect(jsonData.data.username).to.be.a('string');",
+                            "    pm.expect(jsonData.data.role).to.be.a('string');",
+                            "});"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "4. 登录测试 - 用户名登录",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"phone\": \"testuser\",\n    \"password\": \"password123\",\n    \"userType\": \"PATIENT\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/auth/login",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "auth", "login"]
+                }
+            }
+        },
+        {
+            "name": "5. 错误测试 - 无效密码",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"phone\": \"13800138000\",\n    \"password\": \"wrongpassword\",\n    \"userType\": \"PATIENT\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/auth/login",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "auth", "login"]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"密码错误应该返回错误\", function () {",
+                            "    pm.response.to.have.status(400);",
+                            "    var jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.code).to.not.eql(0);",
+                            "});"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "6. 权限测试 - 无Token访问",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/auth/user/info",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "v1", "auth", "user", "info"]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"无Token访问应该被拒绝\", function () {",
+                            "    pm.response.to.have.status(400);",
+                            "    var jsonData = pm.response.json();",
+                            "    pm.expect(jsonData.code).to.not.eql(0);",
+                            "});"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

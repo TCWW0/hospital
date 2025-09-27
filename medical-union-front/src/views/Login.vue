@@ -48,21 +48,24 @@
             <p>请输入您的账号信息</p>
           </div>
           
-          <a-form
-            ref="formRef"
-            :model="loginForm"
-            :rules="rules"
-            layout="vertical"
-            size="large"
-            @submit="handleSubmit"
-          >
-            <a-form-item field="phone" label="手机号">
+          <form @submit.prevent="handleSubmit">
+            <a-form
+              ref="formRef"
+              :model="loginForm"
+              :rules="rules"
+              layout="vertical"
+              size="large"
+            >
+            <a-form-item field="phone" :label="phoneLabel">
               <a-input
                 v-model="loginForm.phone"
-                placeholder="请输入手机号"
+                :placeholder="phonePlaceholder"
                 allow-clear
-                :prefix="() => h(IconMobile)"
-              />
+              >
+                <template #prefix>
+                  <IconMobile />
+                </template>
+              </a-input>
             </a-form-item>
             
             <a-form-item field="password" label="密码">
@@ -70,16 +73,21 @@
                 v-model="loginForm.password"
                 placeholder="请输入密码"
                 allow-clear
-                :prefix="() => h(IconLock)"
-              />
+              >
+                <template #prefix>
+                  <IconLock />
+                </template>
+              </a-input-password>
             </a-form-item>
             
             <a-form-item field="userType" label="用户类型">
               <a-select
                 v-model="loginForm.userType"
                 placeholder="请选择用户类型"
-                :prefix="() => h(IconUserGroup)"
               >
+                <template #prefix>
+                  <IconUserGroup />
+                </template>
                 <a-option value="DOCTOR">医生</a-option>
                 <a-option value="PATIENT">患者</a-option>
                 <a-option value="ADMIN">管理员</a-option>
@@ -88,24 +96,41 @@
             
             <div class="form-options">
               <a-checkbox v-model="rememberPassword">记住密码</a-checkbox>
-              <a-link href="#" class="forgot-password">忘记密码？</a-link>
+              <a-link href="#" class="forgot-password" @click.prevent="handleForgotPassword">忘记密码？</a-link>
             </div>
             
             <a-form-item>
               <a-button
                 type="primary"
-                html-type="submit"
+                html-type="button"
                 long
                 :loading="loading"
                 class="login-button"
+                @click.prevent="handleSubmit"
               >
                 {{ loading ? '登录中...' : '登录' }}
               </a-button>
             </a-form-item>
-          </a-form>
-          
+            
+            </a-form>
+
+          </form>
+
           <div class="form-footer">
-            <p>还没有账号？<a-link href="#" @click="handleRegister">立即注册</a-link></p>
+            <p>还没有账号？<a-link href="#" @click.prevent="handleRegister">立即注册</a-link></p>
+            
+            <!-- 开发模式提示 -->
+            <div v-if="isDevelopment && isUsingMockAuth" class="dev-mode-info">
+              
+              <div class="mock-accounts">
+                <p class="mock-title">测试账号：</p>
+                <div class="mock-account-list">
+                  <p><code>患者：13800138000 / password123</code></p>
+                  <p><code>医生：DOC001 / doctor123</code></p>
+                  <p><code>管理员：ADMIN001 / admin123</code></p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -114,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, h } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import {
@@ -127,13 +152,17 @@ import {
   IconMobile
 } from '@arco-design/web-vue/es/icon';
 import { authApi } from '@/api';
-import { mockLogin, shouldUseMock } from '@/utils/mockApi';
+import { shouldUseMockAuth, mockAuthLogin } from '@/utils/mockAuth';
 import type { LoginRequest } from '@/types';
 
 const router = useRouter();
 const formRef = ref();
 const loading = ref(false);
 const rememberPassword = ref(false);
+
+// 环境变量检测
+const isDevelopment = computed(() => import.meta.env.DEV);
+const isUsingMockAuth = computed(() => shouldUseMockAuth());
 
 // 表单数据
 const loginForm = reactive<LoginRequest>({
@@ -142,46 +171,140 @@ const loginForm = reactive<LoginRequest>({
   userType: 'PATIENT'
 });
 
-// 表单验证规则
-const rules = {
-  phone: [
-    { required: true, message: '请输入手机号' },
-    { 
-      match: /^1[3-9]\d{9}$/, 
-      message: '请输入正确的手机号格式' 
-    }
-  ],
-  password: [
-    { required: true, message: '请输入密码' },
-    { minLength: 6, message: '密码至少6个字符' }
-  ],
-  userType: [
-    { required: true, message: '请选择用户类型' }
-  ]
-};
+// 动态 label / placeholder
+const phoneLabel = computed(() => (loginForm.userType === 'DOCTOR' ? '工号' : '手机号'));
+const phonePlaceholder = computed(() => (loginForm.userType === 'DOCTOR' ? '请输入工号' : '请输入手机号'));
+
+// 表单验证规则（根据用户类型动态返回）
+const rules = computed(() => {
+  const phoneRule = loginForm.userType === 'DOCTOR'
+    ? [{ required: true, message: '请输入工号' }]
+    : [
+        { required: true, message: '请输入手机号' },
+        { match: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式' }
+      ];
+
+  return {
+    phone: phoneRule,
+    password: [
+      { required: true, message: '请输入密码' },
+      { minLength: 6, message: '密码至少6个字符' }
+    ],
+    userType: [
+      { required: true, message: '请选择用户类型' }
+    ]
+  };
+});
 
 // 处理登录
-const handleSubmit = async ({ errors }: { errors: any }) => {
-  if (errors) return;
-  
-  loading.value = true;
-  
+const handleSubmit = async (payload?: any) => {
+  // 支持三种调用场景：
+  // 1. a-form 验证后传入 { errors }
+  // 2. 原生 DOM Event（如浏览器默认提交）
+  // 3. 无参数直接调用（脚本触发）
+
+  // 如果是 DOM Event，阻止默认导航
   try {
-    let response;
+    if (payload && typeof payload.preventDefault === 'function') {
+      payload.preventDefault();
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // 如果表单验证器传入了 errors 对象，检查并返回
+  if (payload && payload.errors) {
+    if (payload.errors) {
+      console.log('表单验证未通过：', payload.errors);
+      return;
+    }
+  }
+
+  // 兜底：如果没有 errors 信息，使用 formRef 的 validate 方法（如果可用）来确保字段验证
+  if (!payload || typeof payload.errors === 'undefined') {
+    if (formRef.value && typeof formRef.value.validate === 'function') {
+      try {
+        // validate() 在通过时返回 Promise.resolve(), 验证失败会抛出或返回 rejected promise
+        await formRef.value.validate();
+      } catch (err) {
+        console.log('表单验证失败（validate 返回）:', err);
+        return;
+      }
+    }
+  }
+
+  loading.value = true;
+
+  try {
+    let response: any;
+
+    console.log('handleSubmit invoked; loginForm:', JSON.parse(JSON.stringify(loginForm)));
     
-    // 根据配置选择使用 Mock API 还是真实 API
-    if (shouldUseMock()) {
-      console.log('🔧 使用 Mock API 进行登录测试');
-      response = await mockLogin(loginForm);
+    // 根据环境变量选择登录方式
+    const useMockAuth = shouldUseMockAuth();
+    console.log('使用', useMockAuth ? 'Mock' : '真实后端', 'API 进行登录');
+    
+    if (useMockAuth) {
+      // 使用 Mock 登录
+      console.log('Mock login payload:', loginForm);
+      response = await mockAuthLogin(loginForm.phone, loginForm.password, loginForm.userType);
     } else {
+      // 使用真实后端 API 登录
+      console.log('API call payload:', loginForm);
       response = await authApi.login(loginForm);
     }
     
-    // 处理登录响应
-    if (response.code === 200) {
+    // 处理登录响应 (支持两种格式：mock格式和后端格式)
+    console.log('Login response raw:', response);
+    if (response.code === 200 || response.code === 0) {
+      const { data } = response;
+
+      // 兼容后端和mock的不同数据结构；尝试从任意深度提取 token
+      const findToken = (obj: any): string | null => {
+        if (!obj || typeof obj !== 'object') return null;
+        if (typeof obj.token === 'string' && obj.token) return obj.token;
+        for (const k of Object.keys(obj)) {
+          try {
+            const v = obj[k];
+            if (v && typeof v === 'object') {
+              const t = findToken(v);
+              if (t) return t;
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+        return null;
+      };
+
+      let token: string | null = null;
+      let userInfo: any = null;
+
+      const backendData = data as any;
+      token = backendData.token || findToken(backendData);
+      userInfo = backendData.user || {
+        id: backendData.userId,
+        username: backendData.username,
+        userType: backendData.userType || backendData.role, // 优先使用 userType，兼容后端
+        role: backendData.role,
+        relatedId: backendData.userId,
+        profileJson: backendData.profileJson,
+        name: backendData.name,
+        phone: backendData.phone
+      };
+
+      console.log('Extracted token:', token);
+      console.log('Extracted userInfo:', userInfo);
+
+      if (!token) {
+        console.error('登录失败：未能在后端响应中提取到 token，响应为：', response);
+        Message.error('登录失败：未返回认证 token，请检查后端返回格式（查看控制台）');
+        return;
+      }
+
       // 存储用户信息和 token
-      localStorage.setItem('medical_union_token', response.data.token);
-      localStorage.setItem('medical_union_user', JSON.stringify(response.data.user));
+      localStorage.setItem('medical_union_token', token);
+      localStorage.setItem('medical_union_user', JSON.stringify(userInfo));
       
       // 记住密码功能
       if (rememberPassword.value) {
@@ -193,10 +316,12 @@ const handleSubmit = async ({ errors }: { errors: any }) => {
         localStorage.removeItem('medical_union_remember');
       }
       
-      Message.success('登录成功！');
+  // 患者登录后的友好提示：优先显示姓名，其次手机号或用户名
+  const displayName = (userInfo && (userInfo.name || userInfo.username || userInfo.phone)) || loginForm.phone;
+  Message.success(response.message || `欢迎，${displayName}！`);
       
       // 根据用户类型跳转到对应页面
-      const userType = response.data.user.userType;
+      const userType = userInfo.userType || userInfo.role;
       switch (userType) {
         case 'DOCTOR':
           router.push('/doctor');
@@ -226,6 +351,14 @@ const handleRegister = () => {
   Message.info('注册功能即将开放，请联系管理员');
 };
 
+// 处理忘记密码（阻止默认链接导航）
+const handleForgotPassword = (ev?: Event) => {
+  if (ev && ev.preventDefault) ev.preventDefault();
+  Message.info('请联系管理员重置密码或使用忘记密码流程（开发中）');
+};
+
+// （已移除开发调试相关函数：showApiInfo/testConnection）
+
 // 页面初始化 - 检查是否有记住的用户信息
 const initForm = () => {
   try {
@@ -243,6 +376,8 @@ const initForm = () => {
 
 // 组件挂载时初始化
 initForm();
+
+// 初始化完成
 </script>
 
 <style lang="less" scoped>
@@ -407,6 +542,82 @@ initForm();
       font-size: 14px;
       color: @gray-600;
       margin: 0;
+    }
+    
+    .dev-mode-info {
+      margin-top: 16px;
+      text-align: left;
+      
+      .mock-accounts {
+        margin-top: 12px;
+        padding: 8px;
+        background: @gray-50;
+        border-radius: 6px;
+        
+        .mock-title {
+          font-size: 13px;
+          font-weight: 500;
+          margin: 0 0 8px 0;
+          color: @gray-700;
+        }
+        
+        .mock-account-list {
+          p {
+            margin: 4px 0;
+            font-size: 12px;
+            
+            code {
+              background: @white;
+              border: 1px solid @gray-200;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-family: 'Courier New', monospace;
+              color: @gray-700;
+              font-size: 11px;
+              display: inline-block;
+              width: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .test-button {
+    margin-top: 8px;
+    border-color: @warning-color;
+    color: @warning-color;
+    
+    &:hover {
+      border-color: darken(@warning-color, 10%);
+      color: darken(@warning-color, 15%);
+      background: lighten(@warning-color, 35%);
+    }
+  }
+  
+  .dev-info {
+    margin-top: 16px;
+    
+    .api-status {
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .dev-tips {
+      p {
+        font-size: 12px;
+        color: @gray-500;
+        margin: 4px 0;
+        
+        code {
+          font-family: 'Courier New', monospace;
+          background: @gray-100;
+          padding: 2px 4px;
+          border-radius: 4px;
+          font-size: 11px;
+        }
+      }
     }
   }
 }

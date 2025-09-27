@@ -73,7 +73,10 @@ export async function getPatientTrend(days = 7) {
 import { http } from '@/utils/request';
 import type { 
   LoginRequest, 
-  LoginResponse, 
+  RegisterRequest,
+  BackendResponse,
+  LoginResponseData,
+  UserInfoData,
   Patient, 
   Referral, 
   DoctorDashboard, 
@@ -83,13 +86,21 @@ import type {
 
 // 认证相关 API
 export const authApi = {
+  // 用户注册
+  register: (data: RegisterRequest) => 
+    http.post<BackendResponse<{ userId: number; message: string }>>('/auth/register', data),
+  
   // 用户登录
   login: (data: LoginRequest) => 
-    http.post<LoginResponse>('/auth/login', data),
+    http.post<BackendResponse<LoginResponseData>>('/api/v1/auth/login', data),
+  
+  // 获取用户信息
+  getUserInfo: () => 
+    http.get<BackendResponse<UserInfoData>>('/api/v1/auth/user/info'),
   
   // 用户登出
   logout: () => 
-    http.post('/auth/logout'),
+    http.post('/api/v1/auth/logout'),
 };
 
 // 患者相关 API

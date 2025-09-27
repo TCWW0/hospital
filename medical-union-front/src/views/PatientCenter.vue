@@ -2,20 +2,20 @@
   <div class="patient-center">
     <a-layout>
       <!-- 侧边栏 -->
-      <a-layout-sider 
-        :width="280" 
-        :collapsed-width="80"
-        :collapsed="collapsed" 
-        :collapsible="true"
-        class="layout-sider"
-      >
+            <a-layout-sider 
+              :width="280" 
+              :collapsed-width="95"
+              :collapsed="collapsed" 
+              :collapsible="true"
+              :class="['layout-sider', { 'without-transition': !enableSiderTransition }]"
+            >
         <div class="logo">
           <IconHeart class="logo-icon" />
           <span v-if="!collapsed" class="logo-text">医联体系统</span>
         </div>
         
         <a-menu 
-          :default-selected-keys="[currentRoute]"
+          :selected-keys="[currentRoute]"
           :collapsed="collapsed"
           :style="{ height: 'calc(100vh - 64px)', borderRight: 0 }"
           mode="inline"
@@ -25,6 +25,10 @@
           <a-menu-item key="dashboard" @click="$router.push('/patient')">
             <IconHome />
             <span>个人中心</span>
+          </a-menu-item>
+          <a-menu-item key="hospital" @click="$router.push('/patient/hospital')">
+            <IconBarChart />
+            <span>医院概览</span>
           </a-menu-item>
           <a-menu-item key="profile" @click="$router.push('/patient/profile')">
             <IconUser />
@@ -37,10 +41,6 @@
           <a-menu-item key="referrals" @click="$router.push('/patient/referrals')">
             <IconSwap />
             <span>转诊记录</span>
-          </a-menu-item>
-          <a-menu-item key="hospital" @click="$router.push('/patient/hospital')">
-            <IconBarChart />
-            <span>医院</span>
           </a-menu-item>
           <a-menu-item key="doctors" @click="$router.push('/patient/doctors')">
             <IconUserGroup />
@@ -64,7 +64,7 @@
           <div class="header-left">
             <a-button 
               type="text" 
-              @click="collapsed = !collapsed"
+              @click="toggleCollapse()"
               class="collapse-btn"
             >
               <IconMenuUnfold v-if="collapsed" />
@@ -99,7 +99,7 @@
         
         <!-- 内容区域 -->
         <a-layout-content class="layout-content">
-          <router-view />
+          <router-view :key="$route.fullPath" />
         </a-layout-content>
       </a-layout>
     </a-layout>
@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import {
@@ -129,6 +129,9 @@ import {
 const router = useRouter();
 const route = useRoute();
 const collapsed = ref(false);
+const enableSiderTransition = ref(false);
+let collapseTimer: number | undefined;
+const COLLAPSE_KEY = 'patient_center_sider_collapsed';
 
 // 获取用户信息
 const userInfo = computed(() => {
@@ -144,6 +147,8 @@ const userInfo = computed(() => {
 const currentRoute = computed(() => {
   const path = route.path;
   if (path === '/patient') return 'dashboard';
+  // 访问就诊详情页时，仍归类为“就诊记录”高亮
+  if (path.includes('/visit/')) return 'visits';
   if (path.includes('/profile')) return 'profile';
   if (path.includes('/visits')) return 'visits';
   if (path.includes('/referrals')) return 'referrals';
@@ -168,6 +173,8 @@ const currentRoute = computed(() => {
   titles.telemedicine = '远程医疗申请';
   // special case: appointment voucher
   if (route.path.includes('/patient/appointment/voucher')) return '预约凭证';
+  // special case: visit detail
+  if (route.path.includes('/patient/visit/')) return '就诊详情';
   return titles[currentRoute.value] || '个人中心';
 };
 
@@ -189,6 +196,33 @@ onMounted(() => {
   if (!userInfo.value || userInfo.value.userType !== 'PATIENT') {
     Message.error('权限不足');
     router.push('/login');
+  }
+  // 恢复侧边栏折叠状态
+  try {
+    const saved = localStorage.getItem(COLLAPSE_KEY);
+    if (saved !== null) {
+      collapsed.value = saved === '1';
+    }
+  } catch {}
+});
+
+// 切换侧边栏展开/收起时，记忆状态
+function toggleCollapse(){
+  enableSiderTransition.value = true;
+  collapsed.value = !collapsed.value;
+  try { localStorage.setItem(COLLAPSE_KEY, collapsed.value ? '1' : '0'); } catch {}
+  if (collapseTimer) {
+    window.clearTimeout(collapseTimer);
+  }
+  collapseTimer = window.setTimeout(() => {
+    enableSiderTransition.value = false;
+    collapseTimer = undefined;
+  }, 360);
+}
+
+onBeforeUnmount(() => {
+  if (collapseTimer) {
+    window.clearTimeout(collapseTimer);
   }
 });
 </script>
@@ -242,8 +276,8 @@ onMounted(() => {
   // 收缩状态下的logo样式
   &.arco-layout-sider-collapsed {
     .logo {
-      padding: 0 16px;
-      justify-content: center;
+      padding: 0 20px;
+      justify-content: flex-start;
       
       .logo-icon {
         margin-right: 0;
@@ -258,6 +292,8 @@ onMounted(() => {
   
   // OpenAI ChatGPT风格的患者菜单
   :deep(.patient-menu) {
+    --menu-icon-size: 20px;
+
     background-color: #ffffff;
     padding: 16px 12px;
     height: 100%;              // 占满父容器高度
@@ -274,16 +310,18 @@ onMounted(() => {
     .arco-menu-item {
       color: #374151;
       background-color: transparent;
-      border-radius: 8px;
-      margin: 4px 0;
+      border-radius: 12px;
+      margin: 8px 0;
       font-size: 14px;
       font-weight: 500;
-      padding: 12px 16px;
+      padding: 14px 15px 14px 16px;
       transition: all 0.2s ease;
       border: none;
-      min-height: 44px;
+      min-height: 52px;
       display: flex;
       align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
       
       &:hover {
         background-color: #f3f4f6;
@@ -291,9 +329,10 @@ onMounted(() => {
       }
       
       &.arco-menu-selected {
-        background-color: #f3f4f6;
+        background-color: #eef2f7;
         color: #1f2937;
         font-weight: 600;
+        box-shadow: inset 0 0 0 1px #d1d5db;
         
         .arco-icon {
           color: #1f2937;
@@ -303,64 +342,69 @@ onMounted(() => {
     
     .arco-icon {
       color: #6b7280;
-      font-size: 20px;
-      margin-right: 16px;
+      font-size: var(--menu-icon-size) !important;
       flex-shrink: 0;
+      transition: color 0.2s ease;
     }
     
     .arco-menu-selected .arco-icon {
       color: #1f2937;
     }
+
+    .arco-menu-item span {
+      display: inline-block;
+      white-space: nowrap;
+      transition: opacity 0.28s ease, max-width 0.28s ease, margin 0.28s ease, transform 0.28s ease;
+      overflow: hidden;
+      max-width: 160px;
+    }
     
     // OpenAI风格的侧边栏收缩设计
     &.arco-menu-collapsed {
-      padding: 12px 4px; // 进一步减少padding
+      padding: 16px 12px;
       width: 100%;
-      overflow: hidden; // 确保没有滚动条
-      height: auto; // 让高度自适应
-      
+      overflow: hidden;
+
       .arco-menu-item {
-        width: 100%;
-        max-width: 56px;
-        height: 56px; // 对应调整高度
-        padding: 0;
-        margin: 4px auto; // 减少边距
-        text-align: center;
-        justify-content: center;
-        align-items: center;
+        width: 60px;
+        min-height: 50px;
+        padding: 14px 16px;
+        margin: 8px 0;
         display: flex;
-        border-radius: 10px; // 稍微减少圆角
-        position: relative;
-        flex-shrink: 0; // 防止压缩
-        
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+
         .arco-icon {
-          margin-right: 0;
-          font-size: 20px; // 调整图标尺寸适配56px容器
-          color: #6b7280;
+          margin: 0 ;
+          font-size: var(--menu-icon-size) !important;    // 控制图标大小
         }
-        
-        &:hover {
-          background-color: #f3f4f6;
-          
-          .arco-icon {
-            color: #1f2937;
-          }
-        }
-        
+
         &.arco-menu-selected {
-          background-color: #f3f4f6;
-          border: 2px solid #d1d5db; // GPT风格的中性灰色边框
-          
-          .arco-icon {
-            color: #1f2937;
-            font-size: 20px;
-          }
+          background-color: #eef2f7;
+          box-shadow: inset 0 0 0 1px #d1d5db;
         }
-        
+
         span {
-          display: none;
+          max-width: 0;
+          opacity: 0;
+          margin-left: 0;
+          transform: translateX(-6px);
         }
       }
+    }
+  }
+}
+
+.without-transition {
+  transition: none !important;
+
+  .logo {
+    transition: none !important;
+
+    .logo-icon,
+    .logo-text {
+      transition: none !important;
     }
   }
 }
@@ -454,22 +498,19 @@ onMounted(() => {
     }
     
     :deep(.patient-menu) {
-      padding: 12px 8px;
       
       .arco-menu-item {
         font-size: 13px;
-        padding: 10px 12px;
+        padding: 10px 10px 10px 12px;
         margin: 2px 0;
       }
       
       &.arco-menu-collapsed {
-        padding: 12px 4px;
+        padding: 12px 8px;
         
         .arco-menu-item {
-          width: 56px;
-          height: 56px;
-          margin: 6px 0;
-          border-radius: 10px;
+          padding: 10px 12px;
+          margin: 4px 0;
           
           .arco-icon {
             font-size: 22px;
@@ -496,11 +537,10 @@ onMounted(() => {
       }
       
       &.arco-menu-collapsed {
-        padding: 8px 2px;
+        padding: 8px 4px;
         
         .arco-menu-item {
-          width: 48px;
-          height: 48px;
+          padding: 8px 10px;
           margin: 4px 0;
           border-radius: 8px;
           

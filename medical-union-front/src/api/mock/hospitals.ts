@@ -27,7 +27,11 @@ const HOSPITALS: HospitalDetail[] = [
     address: '北京市东城区xxx',
     phone: '010-12345678',
     rating: 4.8,
-    departments: [ { id: 'd-nei', name: '内科' }, { id: 'd-waike', name: '外科' } ],
+    departments: [
+      { id: 'd-nei', name: '内科' },
+      { id: 'd-waike', name: '外科' },
+      { id: 'd-guke', name: '骨科' }
+    ],
     availableCount: 12,
   },
   {

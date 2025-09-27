@@ -3,8 +3,10 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import type { ApiResponse } from '@/types';
 
 // 创建 axios 实例
+// 在开发环境中使用相对路径让 Vite 的 dev server 代理 (/api -> backend) 生效，避免跨域预检导致的 OPTIONS 403
+const devBase = import.meta.env.DEV ? '' : import.meta.env.VITE_API_BASE_URL;
 const instance: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: devBase,
   timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -49,26 +51,47 @@ instance.interceptors.response.use(
         data: response.data,
       });
     }
-    // 兼容两种返回格式：
-    // 1) 后端返回 envelope: { code, message, data }
-    // 2) json-server 等 mock 返回原始资源（数组或对象）
+    // 兼容三种返回格式：
+    // 1) 后端返回 envelope: { success, code, message, data } (新增)
+    // 2) 前端期望格式: { code, message, data }
+    // 3) json-server 等 mock 返回原始资源（数组或对象）
     const raw = response.data;
-    const envelope = (raw && typeof raw === 'object' && Object.prototype.hasOwnProperty.call(raw, 'code'))
-      ? raw
-      : { code: 200, message: 'OK', data: raw };
+    let envelope;
+    
+    if (raw && typeof raw === 'object') {
+      if (Object.prototype.hasOwnProperty.call(raw, 'success')) {
+        // 后端格式 { success, code, message, data } -> 转换为前端格式
+        envelope = {
+          code: raw.success ? 200 : (raw.code || 500),
+          message: raw.message || 'Unknown error',
+          data: raw.data
+        };
+      } else if (Object.prototype.hasOwnProperty.call(raw, 'code')) {
+        // 已经是前端格式 { code, message, data }
+        envelope = raw;
+      } else {
+        // mock 格式，直接包装
+        envelope = { code: 200, message: 'OK', data: raw };
+      }
+    } else {
+      envelope = { code: 200, message: 'OK', data: raw };
+    }
 
     const { code, message } = envelope as { code?: number; message?: string };
 
     // 处理业务错误
-    if (code !== 200) {
+    if (code !== 200 && code !== 0) {
       const errorMessage = message || '请求失败';
 
       // 如果是认证错误，清除 token 并跳转到登录页
       if (code === 401) {
         localStorage.removeItem('medical_union_token');
         localStorage.removeItem('medical_union_user');
-        // 这里可以添加路由跳转逻辑
-        window.location.href = '/login';
+        // 只有在不是登录页面时才跳转
+        if (!window.location.pathname.includes('/login')) {
+          console.log('🔄 认证失败，跳转到登录页');
+          window.location.href = '/login';
+        }
       }
 
       console.error('❌ Business Error:', errorMessage);

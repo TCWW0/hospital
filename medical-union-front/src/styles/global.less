@@ -202,3 +202,22 @@ a {
   opacity: 0;
   transform: translateX(-20px);
 }
+
+// global helpers
+.text-muted { color: #6b7280; }
+.text-strong { color: #111827; font-weight: 700; }
+
+// Reusable card styles
+.mu-card {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid rgba(11,95,255,0.06);
+  box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+  padding: 18px 20px;
+}
+.mu-card--interactive {
+  transition: transform .12s ease, box-shadow .12s ease;
+  &:hover { transform: translateY(-6px); box-shadow: 0 12px 36px rgba(15,23,42,0.08); }
+}
+.mu-card__title { font-weight: 800; color: #111827; }
+.mu-card__meta { color: #6b7280; }
