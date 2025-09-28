@@ -5,7 +5,7 @@
         <h3 class="title">我的转诊记录</h3>
         <p class="subtitle">掌握每一次上转/下转的实时进展与诊疗反馈</p>
       </div>
-      <div class="stats" v-if="!loading">共 {{ referrals.length }} 条记录</div>
+  <div class="stats" v-if="!loading">共 {{ total }} 条记录</div>
     </div>
 
     <div class="filter-bar">
@@ -37,59 +37,77 @@
 
     <div class="content-scroll">
       <a-spin :loading="loading" class="list-spin">
-        <div v-if="referrals.length" class="card-grid">
-          <div v-for="referral in referrals" :key="referral.id" class="referral-entry">
-            <ReferralCard
-              :referral="referral"
-              :show-actions="false"
-              @open="goDetail"
-            >
-              <template #actions>
-                <a-space>
-                  <a-button type="primary" status="normal" @click.stop="goDetail(referral.id)">查看详情</a-button>
-                  <a-button type="outline" status="normal" @click.stop="downloadReport(referral)" :disabled="!hasReport(referral)">下载反馈</a-button>
-                  <a-button type="text" @click.stop="shareReferral(referral)">分享医生（模拟）</a-button>
-                </a-space>
-              </template>
-            </ReferralCard>
-            <div class="referral-extra">
-              <ReferralProgress :referral="referral" />
-              <div class="referral-meta">
-                <div v-if="latestEvent(referral)" class="timeline-hint">
-                  <span class="muted">最近更新：</span>
-                  <span>{{ latestEvent(referral)?.note || statusLabel(referral.status) }}</span>
-                  <span class="timestamp">{{ formatDate(latestEvent(referral)?.at || referral.updatedAt) }}</span>
-                </div>
-                <div v-if="referral.attentionNotes?.length" class="attention-hint">
-                  <span class="muted">注意：</span>
-                  <span>{{ referral.attentionNotes.join('；') }}</span>
+        <template #default>
+          <div v-if="referrals.length" class="list-body">
+            <div class="card-grid">
+              <div v-for="referral in referrals" :key="referral.id" class="referral-entry">
+                <ReferralCard
+                  :referral="referral"
+                  :show-actions="false"
+                  @open="goDetail"
+                >
+                  <template #actions>
+                    <a-space>
+                      <a-button type="primary" status="normal" @click.stop="goDetail(referral.id)">查看详情</a-button>
+                      <a-button type="outline" status="normal" @click.stop="downloadReport(referral)" :disabled="!hasReport(referral)">下载反馈</a-button>
+                      <a-button type="text" @click.stop="shareReferral(referral)">分享医生（模拟）</a-button>
+                    </a-space>
+                  </template>
+                </ReferralCard>
+                <div class="referral-extra">
+                  <div class="status-row">
+                    <a-tag size="small" class="status-pill" :color="statusPillStyle(referral.status).color" :style="{ backgroundColor: statusPillStyle(referral.status).bg }">
+                      {{ statusLabel(referral.status) }}
+                    </a-tag>
+                    <span class="direction">{{ referral.direction === 'outbound' ? '上转' : '下转' }} · {{ referral.transferType === 'outpatient' ? '门诊' : '住院' }}</span>
+                  </div>
+                  <div class="referral-meta">
+                    <div v-if="latestEvent(referral)" class="timeline-hint">
+                      <span class="muted">最近更新：</span>
+                      <span>{{ latestEvent(referral)?.note || statusLabel(referral.status) }}</span>
+                      <span class="timestamp">{{ formatDate(latestEvent(referral)?.at || referral.updatedAt) }}</span>
+                    </div>
+                    <div v-if="referral.attentionNotes?.length" class="attention-hint">
+                      <span class="muted">注意：</span>
+                      <span>{{ referral.attentionNotes.join('；') }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+            <div v-if="total > pageSize" class="pager">
+              <a-button size="small" :disabled="page <= 1" @click="prevPage">上一页</a-button>
+              <div>第 {{ page }} 页 / 共 {{ totalPages }} 页</div>
+              <a-button size="small" :disabled="page >= totalPages" @click="nextPage">下一页</a-button>
+            </div>
           </div>
-        </div>
-        <a-empty v-else description="暂无转诊记录" class="empty-block" />
+          <a-empty v-else description="暂无转诊记录" class="empty-block" />
+        </template>
       </a-spin>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import ReferralCard from '@/components/ReferralCard.vue';
-import ReferralProgress from '@/components/ReferralProgress.vue';
 import { fetchReferrals, exportReferral } from '@/api/mock/referrals';
 import type { ReferralCase, ReferralStatus } from '@/api/mock/referrals';
 
 const router = useRouter();
+
 const referrals = ref<ReferralCase[]>([]);
 const loading = ref(false);
 const q = ref('');
 const status = ref<ReferralStatus | 'all'>('all');
 const transferType = ref<'all' | 'outpatient' | 'inpatient'>('all');
 const direction = ref<'all' | 'inbound' | 'outbound'>('all');
+const page = ref(1);
+const pageSize = 2;
+const total = ref(0);
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
 
 const statusTextMap: Record<ReferralStatus, string> = {
   pending: '待接收',
@@ -100,7 +118,15 @@ const statusTextMap: Record<ReferralStatus, string> = {
   rejected: '已拒绝'
 };
 
-// 原型场景：默认展示当前登录患者（模拟患者 p1）的转诊记录
+const statusPillMap: Record<ReferralStatus, { color: string; bg: string }> = {
+  pending: { color: '#b15b00', bg: 'rgba(241, 173, 85, 0.18)' },
+  accepted: { color: '#0f7a55', bg: 'rgba(48, 209, 144, 0.18)' },
+  'outpatient-completed': { color: '#0b5fff', bg: 'rgba(11, 95, 255, 0.16)' },
+  'inpatient-completed': { color: '#0369a1', bg: 'rgba(3, 105, 161, 0.16)' },
+  'followed-up': { color: '#5b21b6', bg: 'rgba(91, 33, 182, 0.16)' },
+  rejected: { color: '#b91c1c', bg: 'rgba(185, 28, 28, 0.16)' }
+};
+
 const currentPatientId = 'p1';
 
 async function load() {
@@ -112,10 +138,16 @@ async function load() {
       status: status.value === 'all' ? undefined : status.value,
       transferType: transferType.value === 'all' ? undefined : transferType.value,
       direction: direction.value === 'all' ? undefined : direction.value,
-      page: 1,
-      pageSize: 100
+      page: page.value,
+      pageSize
     });
+    const maxPage = Math.max(1, Math.ceil(res.total / pageSize));
+    if (page.value > maxPage) {
+      page.value = maxPage;
+      return;
+    }
     referrals.value = res.items;
+    total.value = res.total;
   } catch (error) {
     console.error(error);
     Message.error('加载转诊数据失败，请稍后再试');
@@ -124,8 +156,28 @@ async function load() {
   }
 }
 
+function resetPageAndLoad() {
+  if (page.value === 1) {
+    load();
+  } else {
+    page.value = 1;
+  }
+}
+
+function prevPage() {
+  if (page.value > 1) {
+    page.value -= 1;
+  }
+}
+
+function nextPage() {
+  if (page.value < totalPages.value) {
+    page.value += 1;
+  }
+}
+
 function search() {
-  load();
+  resetPageAndLoad();
 }
 
 function resetFilters() {
@@ -133,7 +185,7 @@ function resetFilters() {
   status.value = 'all';
   transferType.value = 'all';
   direction.value = 'all';
-  load();
+  resetPageAndLoad();
 }
 
 function hasReport(referral: ReferralCase) {
@@ -183,6 +235,10 @@ function statusLabel(status: ReferralStatus) {
   return statusTextMap[status] ?? status;
 }
 
+function statusPillStyle(status: ReferralStatus) {
+  return statusPillMap[status] ?? { color: '#1f2937', bg: 'rgba(15, 23, 42, 0.08)' };
+}
+
 function formatDate(value?: string) {
   if (!value) return '—';
   const date = new Date(value);
@@ -191,7 +247,13 @@ function formatDate(value?: string) {
 }
 
 watch([status, transferType, direction], () => {
-  load();
+  resetPageAndLoad();
+});
+
+watch(page, (newValue, oldValue) => {
+  if (newValue !== oldValue) {
+    load();
+  }
 });
 
 onMounted(load);
@@ -259,30 +321,44 @@ onMounted(load);
 .content-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
-  padding-right: 6px;
-  scrollbar-gutter: stable both-edges;
+  max-height: 100%;
+  display: flex;
+  overflow: hidden;
+  border-radius: 16px;
 }
 
 .list-spin {
-  display: block;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  height: 100%;
 }
 
-.content-scroll::-webkit-scrollbar {
+.list-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 10px;
+  scrollbar-gutter: stable both-edges;
+}
+
+.list-body::-webkit-scrollbar {
   width: 8px;
 }
 
-.content-scroll::-webkit-scrollbar-thumb {
+.list-body::-webkit-scrollbar-thumb {
   background: rgba(11, 95, 255, 0.18);
   border-radius: 10px;
 }
 
-.content-scroll:hover::-webkit-scrollbar-thumb {
+.list-body:hover::-webkit-scrollbar-thumb {
   background: rgba(11, 95, 255, 0.32);
 }
 
-.content-scroll {
+.list-body {
   scrollbar-width: thin;
   scrollbar-color: rgba(11, 95, 255, 0.28) transparent;
 }
@@ -317,6 +393,25 @@ onMounted(load);
   gap: 10px;
 }
 
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-pill {
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+}
+
+.direction {
+  color: #0f3ea5;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .referral-meta {
   display: flex;
   flex-direction: column;
@@ -344,6 +439,14 @@ onMounted(load);
 
 .empty-block {
   margin: 60px 0;
+}
+
+.pager {
+  margin: 20px auto 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 768px) {

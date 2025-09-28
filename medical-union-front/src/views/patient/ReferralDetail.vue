@@ -10,13 +10,14 @@
     <div class="content">
       <div class="content-scroll">
         <a-card class="mu-card" :bordered="false">
-          <template v-if="loading">
-            <a-skeleton :loading="true" animation />
-            <a-skeleton :loading="true" animation style="margin-top: 12px" />
-          </template>
-          <template v-else>
-            <template v-if="detail">
-              <div id="referral-detail-print-root">
+          <div :class="['card-scroll', { 'card-scroll--inner': cardInnerScroll }]">
+            <template v-if="loading">
+              <a-skeleton :loading="true" animation />
+              <a-skeleton :loading="true" animation style="margin-top: 12px" />
+            </template>
+            <template v-else>
+              <template v-if="detail">
+                <div id="referral-detail-print-root">
                 <div class="summary">
                   <div class="line1">
                     <span class="direction">{{ directionLabel }}</span>
@@ -158,31 +159,31 @@
                   </div>
                 </template>
 
-                <a-space class="action-bar no-print">
-                  <a-button type="primary" status="normal" :disabled="!detail" @click="handleDownload">导出诊疗摘要</a-button>
-                  <a-button type="outline" :disabled="!detail" @click="handleShare">分享医生（模拟）</a-button>
-                  <a-button @click="goBack">返回列表</a-button>
-                </a-space>
-              </div>
-            </template>
+                  <a-space class="action-bar no-print">
+                    <a-button type="primary" status="normal" :disabled="!detail" @click="handleDownload">导出诊疗摘要</a-button>
+                    <a-button type="outline" :disabled="!detail" @click="handleShare">分享医生（模拟）</a-button>
+                    <a-button @click="goBack">返回列表</a-button>
+                  </a-space>
+                </div>
+              </template>
 
-            <template v-else>
-              <a-result status="404" title="未找到该转诊记录" description="请返回列表重试或联系管理员">
-                <template #extra>
-                  <a-button type="primary" @click="goBack">返回</a-button>
-                </template>
-              </a-result>
+              <template v-else>
+                <a-result status="404" title="未找到该转诊记录" description="请返回列表重试或联系管理员">
+                  <template #extra>
+                    <a-button type="primary" @click="goBack">返回</a-button>
+                  </template>
+                </a-result>
+              </template>
             </template>
-          </template>
+          </div>
         </a-card>
-        <div class="bottom-spring"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import {
@@ -208,11 +209,19 @@ const fontConfig = ref({
   summary: 20
 });
 
+const viewportHeight = ref(typeof window !== 'undefined' ? window.innerHeight : 900);
+const cardInnerScroll = ref(true);
+const CARD_SCROLL_OFFSET = 224;
+const MIN_CARD_SCROLL = 360;
+
+const detailCardMaxHeight = computed(() => Math.max(MIN_CARD_SCROLL, viewportHeight.value - CARD_SCROLL_OFFSET));
+
 const rootVars = computed(() => ({
   '--section-title-size': `${fontConfig.value.sectionTitle}px`,
   '--label-font-size': `${fontConfig.value.label}px`,
   '--value-font-size': `${fontConfig.value.value}px`,
-  '--summary-font-size': `${fontConfig.value.summary}px`
+  '--summary-font-size': `${fontConfig.value.summary}px`,
+  '--detail-card-max-height': `${detailCardMaxHeight.value}px`
 }));
 
 const labelStyle = computed(() => ({ width: '160px', color: '#475569', fontSize: `${fontConfig.value.label}px` }));
@@ -360,7 +369,26 @@ function goBack() {
   }
 }
 
-onMounted(load);
+function updateViewportHeight() {
+  if (typeof window === 'undefined') return;
+  viewportHeight.value = window.innerHeight;
+}
+
+onMounted(() => {
+  load();
+  if (typeof window !== 'undefined') {
+    updateViewportHeight();
+    window.addEventListener('resize', updateViewportHeight);
+    window.addEventListener('orientationchange', updateViewportHeight);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateViewportHeight);
+    window.removeEventListener('orientationchange', updateViewportHeight);
+  }
+});
 
 watch(
   () => route.params.id,
@@ -400,21 +428,17 @@ watch(
   min-height: 0;
 }
 
+
 .content-scroll {
   flex: 1 1 auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   overflow: auto;
-  box-sizing: border-box;
-  padding-right: 8px;
-  padding-bottom: 28px;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.mu-card {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
+  padding-right: 12px;
+  padding-bottom: 24px;
+  scrollbar-gutter: stable both-edges;
 }
 
 .content-scroll::-webkit-scrollbar {
@@ -436,6 +460,63 @@ watch(
 }
 
 .content-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.mu-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+
+.mu-card :deep(.arco-card-body) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.card-scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-right: 0;
+  padding-bottom: 28px;
+}
+
+.card-scroll--inner {
+  max-height: min(100%, var(--detail-card-max-height, 720px));
+  overflow: auto;
+  padding-right: 8px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.card-scroll--inner::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.card-scroll--inner::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.card-scroll--inner::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 8px;
+}
+
+.card-scroll--inner:hover::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.card-scroll--inner {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
@@ -609,18 +690,14 @@ watch(
   margin-top: 28px;
 }
 
-.bottom-spring {
-  flex-grow: 1;
-  min-height: 48px;
-}
-
 @media (max-width: 768px) {
   .page-header {
     border-radius: 8px;
   }
 
-  .content-scroll {
+  .card-scroll {
     padding-right: 4px;
+    max-height: min(100%, var(--detail-card-max-height, 600px));
   }
 
   .feedback-section {

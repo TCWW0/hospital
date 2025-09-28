@@ -151,6 +151,7 @@ const currentRoute = computed(() => {
   if (path.includes('/visit/')) return 'visits';
   if (path.includes('/profile')) return 'profile';
   if (path.includes('/visits')) return 'visits';
+  if (path.includes('/referral/')) return 'referrals';
   if (path.includes('/referrals')) return 'referrals';
   if (path.includes('/hospital')) return 'hospital';
   if (path.includes('/doctors')) return 'doctors';

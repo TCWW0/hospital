@@ -35,16 +35,19 @@
       </a-space>
     </div>
 
-    <div class="list">
-  <ReferralCard
-    v-for="r in list"
-    :key="r.id"
-    :referral="r"
-    :showActions="showReferralActions"
-    @open="openDetail"
-    @accept="handleAccept"
-    @reject="handleReject"
-  />
+    <div class="list-wrapper">
+      <div class="list">
+        <ReferralCard
+          v-for="r in list"
+          :key="r.id"
+          :referral="r"
+          :showActions="showReferralActions"
+          @open="openDetail"
+          @accept="handleAccept"
+          @reject="handleReject"
+        />
+      </div>
+      <p class="list-tip" v-if="total">仅展示最新三条在途转诊，可通过分页查看更多历史记录</p>
     </div>
 
     <div class="pager" style="margin-top:12px; display:flex; gap:8px; align-items:center">
@@ -68,7 +71,8 @@
         <span v-else>转诊详情</span>
       </template>
       <div v-if="currentReferral" class="drawer-body">
-        <a-tabs v-model:active-key="drawerTab" type="capsule" size="small">
+        <div class="drawer-tabs">
+          <a-tabs v-model:active-key="drawerTab" type="capsule" size="small">
           <a-tab-pane key="overview" title="申请信息">
             <div class="tab-scroll">
               <div class="drawer-section">
@@ -267,7 +271,8 @@
           </a-tab-pane>
 
           <a-tab-pane key="feedback" title="诊疗反馈" v-if="showFeedbackTab">
-            <div class="drawer-section" v-if="currentReferral.transferType === 'outpatient'">
+            <div class="tab-scroll">
+              <div class="drawer-section" v-if="currentReferral.transferType === 'outpatient'">
               <div class="section-head">
                 <span>门诊反馈</span>
                 <a-tag v-if="currentReferral.treatmentPlan" size="small" type="primary">已填写</a-tag>
@@ -301,9 +306,9 @@
                   @click="submitOutpatientFeedback"
                 >提交门诊反馈</a-button>
               </div>
-            </div>
+              </div>
 
-            <div class="drawer-section" v-else>
+              <div class="drawer-section" v-else>
               <div class="section-head">
                 <span>住院反馈</span>
                 <a-tag v-if="currentReferral.inpatientReport" size="small" type="primary">已填写</a-tag>
@@ -342,10 +347,12 @@
                   @click="submitInpatientFeedback"
                 >提交住院反馈</a-button>
               </div>
+              </div>
             </div>
           </a-tab-pane>
           <a-tab-pane key="community" title="社区操作" v-if="showCommunityTab">
-            <div class="drawer-section">
+            <div class="tab-scroll">
+              <div class="drawer-section community-panel">
               <div class="section-head">
                 <span>患者交接说明</span>
                 <a-tag v-if="hasInstruction" size="small" type="success">已记录</a-tag>
@@ -371,8 +378,8 @@
                   >提交交接说明</a-button>
                 </div>
               </template>
-            </div>
-            <div class="drawer-section">
+              </div>
+              <div class="drawer-section community-panel">
               <div class="section-head">
                 <span>社区随访</span>
                 <a-tag v-if="followUpHistory.length" size="small" type="primary">已有 {{ followUpHistory.length }} 次</a-tag>
@@ -411,9 +418,11 @@
                   message="等待专科医院完成诊疗并提交下转单后，方可开展社区随访。"
                 />
               </template>
+              </div>
             </div>
           </a-tab-pane>
         </a-tabs>
+        </div>
       </div>
       <a-empty v-else description="请选择一条转诊记录" />
     </a-drawer>
@@ -534,7 +543,8 @@ const nowInputDateTime = () => new Date().toISOString().slice(0, 16);
 
 const list = ref<ReferralCase[]>([]);
 const page = ref(1);
-const pageSize = ref(5);
+const IN_PROGRESS_PAGE_SIZE = 3;
+const pageSize = ref(IN_PROGRESS_PAGE_SIZE);
 const total = ref(0);
 const q = ref('');
 const status = ref<ReferralStatus | 'all'>('all');
@@ -1197,14 +1207,33 @@ function next() { if (page.value < totalPages.value) page.value++; }
 <style scoped>
 .referral-management { padding:20px; background: linear-gradient(180deg,#f8fbff 0,#fff 100%); border-radius:8px }
 .referral-management .toolbar { display:flex; align-items:center; gap:12px; margin-bottom:12px }
-.list { display:flex; flex-direction:column; gap:10px }
+.list-wrapper { display:flex; flex-direction:column; gap:8px }
+.list { display:flex; flex-direction:column; gap:10px; max-height:calc(100vh - 200px);; overflow-y:auto; padding-right:4px }
+.list-tip { margin:0; font-size:12px; color:#64748b }
 .drawer-title { display:flex; flex-direction:column; gap:4px }
 .drawer-title-main { font-weight:600; font-size:16px; color:#111827 }
 .drawer-title-sub { font-size:12px; color:#64748b }
-.drawer-body { display:flex; flex-direction:column; gap:16px; max-height:100% }
-.tab-scroll { max-height:65vh; overflow-y:auto; padding-right:8px; display:flex; flex-direction:column; gap:16px }
+.drawer-body { display:flex; flex-direction:column; height:calc(100vh - 160px); gap:16px; min-height:0 }
+.drawer-tabs { flex:1; min-height:0; display:flex; flex-direction:column }
+.drawer-tabs :deep(.arco-tabs) { flex:1; min-height:0; display:flex; flex-direction:column }
+.drawer-tabs :deep(.arco-tabs-content) { flex:1; min-height:0; display:flex }
+.drawer-tabs :deep(.arco-tabs-pane) { flex:1; min-height:0; display:flex }
+.drawer-tabs :deep(.arco-tabs-content) { flex:1; min-height:0; display:flex }
+.drawer-tabs :deep(.arco-tabs-pane) { flex:1; min-height:0; display:flex }
+:deep(.arco-drawer-body) { display:flex; flex-direction:column; height:100%; padding:24px }
+.tab-scroll { flex:1; min-height:0; overflow-y:auto; padding-right:8px; display:flex; flex-direction:column; gap:16px }
 .drawer-section { background:rgba(248,250,252,0.6); border:1px solid rgba(15,23,42,0.05); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px }
 .tab-scroll .drawer-section { margin:0 }
+.community-panel { border-color:rgba(76,106,255,0.18); background:linear-gradient(180deg,rgba(229,239,255,0.9) 0%, rgba(255,255,255,0.95) 100%); box-shadow:0 10px 30px -20px rgba(15,23,42,0.45); position:relative; overflow:hidden }
+.community-panel::before { content:""; position:absolute; inset:0; border-radius:inherit; border:1px solid rgba(76,106,255,0.22); pointer-events:none }
+.community-panel .section-head { font-size:14px; color:#1d3b8b }
+.community-panel .section-tip { color:#475569; font-size:13px; line-height:1.6 }
+.community-panel :deep(.arco-tag) { background:rgba(59,130,246,0.08); color:#1d4ed8; border-color:transparent }
+.community-panel :deep(.arco-alert) { border-radius:10px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2) }
+.community-panel :deep(.arco-button[type='primary']) { background:linear-gradient(90deg,#2563eb 0%, #7c3aed 100%); border:none }
+.community-panel :deep(.arco-button[type='primary']:hover) { box-shadow:0 8px 16px -10px rgba(37,99,235,0.7) }
+.community-panel :deep(.arco-form-item-label) { font-weight:600; color:#1e293b }
+.community-panel :deep(.arco-textarea) { background:rgba(255,255,255,0.92); border-color:rgba(37,99,235,0.28); box-shadow:inset 0 1px 2px rgba(15,23,42,0.08) }
 .info-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px }
 .info-item label { display:block; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:0.02em; margin-bottom:4px }
 .info-item span { color:#0f172a; font-weight:500 }
