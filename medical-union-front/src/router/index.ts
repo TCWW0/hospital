@@ -123,8 +123,17 @@ const routes: Array<RouteRecordRaw> = [
           requiresAuth: true,
           roles: ['PATIENT']
         }
-      }
-      ,
+      },
+      {
+        path: 'referral/:id',
+        name: 'PatientReferralDetail',
+        component: () => import('@/views/patient/ReferralDetail.vue'),
+        meta: {
+          title: '转诊详情',
+          requiresAuth: true,
+          roles: ['PATIENT']
+        }
+      },
       {
         path: 'hospitals',
         name: 'HospitalList',

@@ -47,7 +47,7 @@
             <span>医生查询</span>
           </a-menu-item>
           <a-menu-item key="appointments" @click="$router.push('/patient/appointments')">
-            <IconSettings />
+            <IconCalendarClock />
             <span>我的预约</span>
           </a-menu-item>
           <a-menu-item key="telemedicine" @click="$router.push('/patient/telemedicine/apply')">
@@ -122,7 +122,7 @@ import {
   IconMenuUnfold,
   IconBarChart,
   IconUserGroup,
-  IconSettings,
+  IconCalendarClock,
   IconMobile
 } from '@arco-design/web-vue/es/icon';
 
@@ -293,6 +293,7 @@ onBeforeUnmount(() => {
   // OpenAI ChatGPT风格的患者菜单
   :deep(.patient-menu) {
     --menu-icon-size: 20px;
+    --menu-padding-left: 24px;
 
     background-color: #ffffff;
     padding: 16px 12px;
@@ -314,7 +315,7 @@ onBeforeUnmount(() => {
       margin: 8px 0;
       font-size: 14px;
       font-weight: 500;
-      padding: 14px 15px 14px 16px;
+      padding: 14px 20px 14px var(--menu-padding-left);
       transition: all 0.2s ease;
       border: none;
       min-height: 52px;
@@ -322,6 +323,8 @@ onBeforeUnmount(() => {
       align-items: center;
       justify-content: flex-start;
       gap: 12px;
+      position: relative;
+      z-index: 0;
       
       &:hover {
         background-color: #f3f4f6;
@@ -366,21 +369,49 @@ onBeforeUnmount(() => {
       overflow: hidden;
 
       .arco-menu-item {
-        width: 60px;
-        min-height: 50px;
-        padding: 14px 16px;
+        position: relative;
+        width: 100%;
+        min-height: 52px;
+        padding: 14px 20px 14px var(--menu-padding-left);
         margin: 8px 0;
         display: flex;
         align-items: center;
         justify-content: flex-start;
         gap: 12px;
+        background-color: transparent;
 
         .arco-icon {
-          margin: 0 ;
+          margin: 0;
           font-size: var(--menu-icon-size) !important;    // 控制图标大小
         }
 
+        &:hover {
+          background-color: transparent;
+        }
+
         &.arco-menu-selected {
+          background-color: transparent;
+          box-shadow: none;
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          left: max(calc(var(--menu-padding-left) - 18px), 0px);
+          top: 50%;
+          width: 56px;
+          height: 56px;
+          border-radius: 14px;
+          transform: translateY(-50%);
+          background-color: transparent;
+          box-shadow: none;
+          transition: background-color 0.2s ease, box-shadow 0.2s ease;
+          z-index: -1;
+          pointer-events: none;
+        }
+
+        &.arco-menu-selected::after,
+        &:hover::after {
           background-color: #eef2f7;
           box-shadow: inset 0 0 0 1px #d1d5db;
         }
@@ -467,9 +498,16 @@ onBeforeUnmount(() => {
 .layout-content {
   background: #ffffff; /* 使用纯白背景，移除浅蓝底色 */
   padding: 24px;
-  overflow-y: auto; /* 仅内容区域可滚动 */
   height: calc(100vh - 64px); /* 减去header高度 */
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  :deep(> *) {
+    flex: 1;
+    min-height: 0;
+  }
 }
 
 // 移动端适配 - OpenAI风格
@@ -498,10 +536,11 @@ onBeforeUnmount(() => {
     }
     
     :deep(.patient-menu) {
+      --menu-padding-left: 18px;
       
       .arco-menu-item {
         font-size: 13px;
-        padding: 10px 10px 10px 12px;
+        padding: 10px 16px 10px var(--menu-padding-left);
         margin: 2px 0;
       }
       
@@ -509,7 +548,7 @@ onBeforeUnmount(() => {
         padding: 12px 8px;
         
         .arco-menu-item {
-          padding: 10px 12px;
+          padding: 10px 16px 10px var(--menu-padding-left);
           margin: 4px 0;
           
           .arco-icon {
@@ -528,11 +567,12 @@ onBeforeUnmount(() => {
   
   .layout-sider {
     :deep(.patient-menu) {
+      --menu-padding-left: 16px;
       padding: 8px 6px;
       
       .arco-menu-item {
         font-size: 12px;
-        padding: 8px 10px;
+        padding: 8px 14px 8px var(--menu-padding-left);
         margin: 1px 0;
       }
       
@@ -540,7 +580,7 @@ onBeforeUnmount(() => {
         padding: 8px 4px;
         
         .arco-menu-item {
-          padding: 8px 10px;
+          padding: 8px 14px 8px var(--menu-padding-left);
           margin: 4px 0;
           border-radius: 8px;
           

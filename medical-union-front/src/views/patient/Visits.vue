@@ -149,8 +149,8 @@ onMounted(load);
 .filters { display:flex; gap:10px; align-items:center; }
 .list { display:flex; flex-direction:column; gap:14px; flex:1; overflow:auto; padding-right:6px; }
 .visit-item { padding:0; }
-.visit-card.card-like { display:flex; justify-content:space-between; align-items:center; padding:18px 20px; min-height:110px; background:#fff; border-radius:10px; box-shadow:0 6px 18px rgba(15,23,42,0.06); border:1px solid rgba(11,95,255,0.06); transition:transform .12s ease, box-shadow .12s ease; }
-.visit-card.card-like:hover { transform:translateY(-6px); box-shadow:0 12px 36px rgba(15,23,42,0.08); }
+.visit-card.card-like { display:flex; justify-content:space-between; align-items:center; padding:20px 22px; min-height:120px; background:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(15,23,42,0.08); border:1px solid rgba(15,23,42,0.06); transition:transform .15s ease, box-shadow .15s ease; }
+.visit-card.card-like:hover { transform:translateY(-4px); box-shadow:0 18px 44px rgba(15,23,42,0.12); }
 .visit-left { display:flex; flex-direction:column; gap:8px; }
 .line1 { display:flex; align-items:center; gap:8px; color:#0f3ea5; font-weight:700; } /* 降低蓝饱和，偏深蓝 */
 .hospital { font-size:18px; color:#111827; } /* 更偏黑 */

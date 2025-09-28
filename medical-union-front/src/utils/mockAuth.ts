@@ -6,6 +6,7 @@ export interface MockUser {
   name: string;
   userId: number;
   role: string;
+  doctorRole?: 'community' | 'hospital';
 }
 
 // Mock 用户数据库
@@ -43,7 +44,8 @@ export const mockUsers: MockUser[] = [
     userType: 'DOCTOR',
     name: '陈医生',
     userId: 20001,
-    role: 'doctor'
+    role: 'doctor',
+    doctorRole: 'hospital'
   },
   {
     phone: 'DOC002', 
@@ -51,7 +53,8 @@ export const mockUsers: MockUser[] = [
     userType: 'DOCTOR',
     name: '刘医生',
     userId: 20002,
-    role: 'doctor'
+    role: 'doctor',
+    doctorRole: 'community'
   },
   {
     phone: 'MD001',
@@ -59,7 +62,8 @@ export const mockUsers: MockUser[] = [
     userType: 'DOCTOR',
     name: '赵主任',
     userId: 20003,
-    role: 'doctor'
+    role: 'doctor',
+    doctorRole: 'hospital'
   },
   
   // 管理员账号
@@ -110,7 +114,8 @@ export function mockAuthLogin(phone: string, password: string, userType?: string
           role: user.role,
           userType: user.userType,
           phone: user.phone,
-          name: user.name
+          name: user.name,
+          doctorRole: user.doctorRole
         }
       });
     }, 800); // 模拟800ms网络延时

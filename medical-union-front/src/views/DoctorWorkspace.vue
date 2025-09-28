@@ -83,6 +83,16 @@
           </div>
           
           <div class="header-right">
+            <div class="role-switch">
+              <span class="role-label">{{ roleLabel }}</span>
+              <a-segmented
+                class="role-segmented"
+                size="small"
+                :model-value="doctorRole"
+                :options="roleOptions"
+                @change="handleRoleChange"
+              />
+            </div>
             <a-dropdown>
               <a-button type="text" class="user-info">
                 <IconUser />
@@ -117,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { mockDoctorDashboard } from '@/utils/mockData';
 import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
@@ -134,10 +144,26 @@ import {
   IconPoweroff
  } from '@arco-design/web-vue/es/icon';
  import { IconUserGroup, IconFile, IconMobile } from '@arco-design/web-vue/es/icon';
+import { useDoctorRole, type DoctorRole, resetDoctorRole } from '@/utils/doctorRole';
 
 const router = useRouter();
 const route = useRoute();
 const collapsed = ref(false);
+const { role: doctorRole, isCommunityDoctor, setDoctorRole } = useDoctorRole();
+
+const roleOptions: Array<{ label: string; value: DoctorRole }> = [
+  { label: '社区医生', value: 'community' },
+  { label: '医院医生', value: 'hospital' }
+];
+
+const roleLabel = computed(() =>
+  doctorRole.value === 'community' ? '社区医生视角' : '医院医生视角'
+);
+
+const communityHospitalInfo = {
+  hospitalName: '朝阳社区卫生服务中心',
+  todayPatients: 18
+};
 
 // ensure imported icons are referenced so TypeScript doesn't warn
 void IconUserGroup;
@@ -146,6 +172,9 @@ void IconMobile;
 
 // 从 mockData 获取医院信息（临时）
 const hospitalInfo = computed(() => {
+  if (isCommunityDoctor.value) {
+    return communityHospitalInfo;
+  }
   try {
     // mockDoctorDashboard 包含 doctorInfo.hospital 以及一些统计
     const doc = mockDoctorDashboard?.doctorInfo || null;
@@ -182,6 +211,7 @@ const currentRoute = computed(() => {
 const handleLogout = () => {
   localStorage.removeItem('medical_union_token');
   localStorage.removeItem('medical_union_user');
+  resetDoctorRole();
   Message.success('已退出登录');
   router.push('/login');
 };
@@ -194,6 +224,23 @@ const handleProfile = () => {
 const handleSettings = () => {
   Message.info('设置功能将在后续发布');
 };
+
+const handleRoleChange = (value: DoctorRole) => {
+  if (value === doctorRole.value) return;
+  setDoctorRole(value);
+  if (value === 'community' && route.path === '/doctor') {
+    router.push('/doctor/referrals');
+  }
+};
+
+watch(
+  () => doctorRole.value,
+  (value) => {
+    if (value === 'community' && route.path === '/doctor') {
+      router.push('/doctor/referrals');
+    }
+  }
+);
 
 onMounted(() => {
   // 检查用户权限
@@ -451,6 +498,28 @@ onMounted(() => {
   }
   
   .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .role-switch {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+
+      .role-label {
+        font-size: 12px;
+        color: #6b7280;
+      }
+
+      .role-segmented {
+        background-color: #f9fafb;
+        border-radius: 999px;
+        padding: 2px;
+      }
+    }
+
     .user-info {
       color: #6b7280;
       padding: 8px 12px;

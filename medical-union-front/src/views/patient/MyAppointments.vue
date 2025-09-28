@@ -19,25 +19,34 @@
     </div>
     <div class="cards-viewport">
       <div class="cards">
-        <a-card v-for="o in orders" :key="o.orderId" class="order-card mu-card mu-card--interactive">
-          <div class="order-top">
-            <div class="order-info">
-              <div class="order-title text-strong">{{ o.date }} {{ o.time }}</div>
-              <div class="doctor-name">{{ o.doctorName }}</div>
-              <div class="muted">{{ o.hospitalName }} · {{ translateSlot(o.slotType) }}</div>
+        <div v-for="o in orders" :key="o.orderId" class="appointment-card card-like">
+          <div class="appointment-main">
+            <div class="line1">
+              <span class="slot">{{ o.date }} {{ o.time }}</span>
+              <span class="sep">·</span>
+              <span class="hospital">{{ o.hospitalName }}</span>
+              <span class="sep">·</span>
+              <span class="slot-type">{{ translateSlot(o.slotType) }}</span>
             </div>
-            <div class="order-status-vertical">
-              <a-tag class="status-tag" :type="getStatusTagType(o.status)">{{ translateStatus(o.status) }}</a-tag>
-              <a-tag v-if="o.payment?.status" class="status-tag payment" :type="getPaymentTagType(o.payment.status)">{{ translatePaymentStatus(o.payment.status) }}</a-tag>
+            <div class="line2">
+              <span class="doctor">{{ o.doctorName }}</span>
+              <span class="muted">预约单号：{{ o.orderId }}</span>
+            </div>
+            <div class="line3">
+              <span class="status-group">
+                <a-tag class="status-tag" :type="getStatusTagType(o.status)">{{ translateStatus(o.status) }}</a-tag>
+                <a-tag v-if="o.payment?.status" class="status-tag payment" :type="getPaymentTagType(o.payment.status)">{{ translatePaymentStatus(o.payment.status) }}</a-tag>
+              </span>
+              <span class="muted">创建时间：{{ o.createdAt }}</span>
             </div>
           </div>
-          <div class="order-actions">
+          <div class="appointment-actions">
             <a-space>
               <a-button v-if="o.status === 'pending' || o.status === 'paid'" type="text" @click="cancel(o.orderId)">取消</a-button>
-              <a-button @click="openVoucher(o.orderId)">查看凭证</a-button>
+              <a-button type="primary" status="normal" @click="openVoucher(o.orderId)">查看凭证</a-button>
             </a-space>
           </div>
-        </a-card>
+        </div>
       </div>
     </div>
   </div>
@@ -181,17 +190,21 @@ onMounted(load);
 .cards-viewport{ scrollbar-width: thin; scrollbar-color: rgba(11,95,255,0.28) transparent; -ms-overflow-style: -ms-autohiding-scrollbar }
 
 .cards { display:flex; flex-direction:column; gap:14px; max-width:960px; margin:0 auto }
-.order-card { min-height:140px; }
-.order-top { display:flex; justify-content:space-between; align-items:stretch }
-.order-info { display:flex; flex-direction:column; justify-content:center }
-.order-title { font-weight:900; font-size:20px; color:#111827 }
-.doctor-name { font-size:16px; margin-top:6px; color:#0f3ea5; font-weight:800 }
-.muted { color:#6b7280 }
-.order-status-vertical { display:flex; flex-direction:column; gap:10px; align-items:flex-end; min-width:180px; justify-content:center }
-.status-tag { padding:8px 14px; border-radius:999px; font-weight:700; font-size:14px; line-height:1.4 }
+.appointment-card { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:20px 22px; min-height:120px; background:#fff; border-radius:14px; box-shadow:0 8px 24px rgba(15,23,42,0.08); border:1px solid rgba(15,23,42,0.06); transition:transform .15s ease, box-shadow .15s ease; }
+.appointment-card:hover { transform:translateY(-4px); box-shadow:0 18px 44px rgba(15,23,42,0.12); }
+.appointment-main { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.line1, .line2, .line3 { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.slot { font-size:18px; font-weight:700; color:#0f3ea5; }
+.hospital, .slot-type { color:#374151; font-weight:600; }
+.doctor { font-size:16px; font-weight:700; color:#111827; }
+.muted { color:#6b7280; font-size:13px; }
+.line3 { justify-content:space-between; gap:16px; }
+.status-group { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.status-tag { padding:6px 14px; border-radius:999px; font-weight:600; font-size:13px; line-height:1.3; }
 .status-tag[type="success"] { background:#dff9f3; color:#027a60 }
 .status-tag[type="warning"] { background:#fff4e6; color:#bb6b00 }
 .status-tag[type="error"] { background:#ffecec; color:#9b2c2c }
 .status-tag.payment{background:#e8f0ff;color:#0b5fff}
-.order-actions { margin-top:12px; text-align:right }
+.appointment-actions { display:flex; align-items:center; justify-content:flex-end; min-width:160px; }
+.appointment-actions .arco-btn { min-width:92px; }
 </style>

@@ -2,7 +2,7 @@
   <div class="patient-profile">
     <h2>个人信息</h2>
     
-    <a-form :model="form" label-align="left" label-col="6" layout="vertical">
+  <a-form class="profile-form" :model="form" label-align="left" label-col="6" layout="vertical">
       <div class="form-section">
         <h3>基本信息</h3>
         <a-row :gutter="16">
@@ -217,13 +217,49 @@ onMounted(() => {
 </script>
 
 <style lang="less" scoped>
-.patient-profile { 
-  padding: 24px; 
-  max-width: 900px; 
-  margin: 0 auto;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+.patient-profile {
+  width: min(100%, calc(100% * 2 / 3));
+  max-width: 1120px;
+  margin: 0 auto 32px;
+  padding: 32px 36px;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: 0 32px 62px -36px rgba(15, 23, 42, 0.55), 0 18px 44px -32px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-height: calc(100vh - 160px);
+  overflow: hidden;
+  align-self: center;
+}
+
+.profile-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  padding-right: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17, 24, 39, 0.32) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(17, 24, 39, 0.32);
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.48);
+  }
 }
 
 .patient-profile h2 { 
@@ -234,6 +270,7 @@ onMounted(() => {
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 12px;
 }
+
 
 .form-section {
   margin-bottom: 32px;
@@ -253,5 +290,37 @@ onMounted(() => {
   padding-top: 24px;
   border-top: 1px solid #e5e7eb;
   text-align: center;
+}
+
+@media (max-width: 1280px) {
+  .patient-profile {
+    width: min(100%, 80%);
+    margin: 0 auto 28px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .patient-profile {
+    width: 100%;
+    margin: 0 auto 24px;
+    max-height: calc(100vh - 120px);
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-profile {
+    padding: 24px;
+    max-height: none;
+    box-shadow: 0 18px 40px -26px rgba(15, 23, 42, 0.4);
+    margin: 0 auto 20px;
+  }
+
+  .profile-form {
+    padding-right: 0;
+  }
+
+  .form-actions {
+    text-align: left;
+  }
 }
 </style>

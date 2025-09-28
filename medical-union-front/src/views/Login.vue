@@ -126,7 +126,8 @@
                 <p class="mock-title">测试账号：</p>
                 <div class="mock-account-list">
                   <p><code>患者：13800138000 / password123</code></p>
-                  <p><code>医生：DOC001 / doctor123</code></p>
+                  <p><code>医院医生：DOC001 / doctor123</code></p>
+                  <p><code>社区医生：DOC002 / password123</code></p>
                   <p><code>管理员：ADMIN001 / admin123</code></p>
                 </div>
               </div>
@@ -154,6 +155,7 @@ import {
 import { authApi } from '@/api';
 import { shouldUseMockAuth, mockAuthLogin } from '@/utils/mockAuth';
 import type { LoginRequest } from '@/types';
+import { setDoctorRole, resetDoctorRole, type DoctorRole } from '@/utils/doctorRole';
 
 const router = useRouter();
 const formRef = ref();
@@ -280,18 +282,34 @@ const handleSubmit = async (payload?: any) => {
       let token: string | null = null;
       let userInfo: any = null;
 
+      const pickDoctorRole = (source: any): DoctorRole | undefined => {
+        if (!source) return undefined;
+        const value = source.doctorRole ?? source.roleTag;
+        return value === 'community' || value === 'hospital' ? value : undefined;
+      };
+
       const backendData = data as any;
       token = backendData.token || findToken(backendData);
-      userInfo = backendData.user || {
-        id: backendData.userId,
-        username: backendData.username,
-        userType: backendData.userType || backendData.role, // 优先使用 userType，兼容后端
-        role: backendData.role,
-        relatedId: backendData.userId,
-        profileJson: backendData.profileJson,
-        name: backendData.name,
-        phone: backendData.phone
-      };
+
+      if (backendData.user) {
+        const normalizedDoctorRole = pickDoctorRole(backendData.user) ?? pickDoctorRole(backendData);
+        userInfo = {
+          ...backendData.user,
+          ...(normalizedDoctorRole ? { doctorRole: normalizedDoctorRole } : {})
+        };
+      } else {
+        userInfo = {
+          id: backendData.userId,
+          username: backendData.username,
+          userType: backendData.userType || backendData.role, // 优先使用 userType，兼容后端
+          role: backendData.role,
+          relatedId: backendData.userId,
+          profileJson: backendData.profileJson,
+          name: backendData.name,
+          phone: backendData.phone,
+          doctorRole: pickDoctorRole(backendData)
+        };
+      }
 
       console.log('Extracted token:', token);
       console.log('Extracted userInfo:', userInfo);
@@ -305,6 +323,14 @@ const handleSubmit = async (payload?: any) => {
       // 存储用户信息和 token
       localStorage.setItem('medical_union_token', token);
       localStorage.setItem('medical_union_user', JSON.stringify(userInfo));
+
+      // 根据医生账号的 doctorRole 初始化视角
+      if ((userInfo.userType || userInfo.role) === 'DOCTOR') {
+        const roleFromBackend = (userInfo.doctorRole || userInfo.roleTag) as DoctorRole | undefined;
+        setDoctorRole(roleFromBackend === 'community' || roleFromBackend === 'hospital' ? roleFromBackend : 'hospital');
+      } else {
+        resetDoctorRole();
+      }
       
       // 记住密码功能
       if (rememberPassword.value) {
