@@ -106,6 +106,7 @@ import {
   IconUser,
   IconSwap,
   IconBarChart,
+  IconBook,
   IconMenuFold,
   IconMenuUnfold,
   IconDown,
@@ -162,6 +163,7 @@ const menuItems: MenuItem[] = [
   { key: 'patients', label: '患者管理', icon: IconUser, to: { name: 'PatientManagement' } },
   { key: 'referrals', label: '转诊管理', icon: IconSwap, to: { name: 'ReferralManagement' } },
   { key: 'telemedicine', label: '远程医疗', icon: IconHeart, to: { name: 'DoctorTelemedicine' } },
+  { key: 'teaching', label: '远程教学', icon: IconBook, to: { name: 'DoctorTeachingList' } },
   { key: 'statistics', label: '数据统计', icon: IconBarChart, to: { name: 'DoctorStatistics' } }
 ];
 
@@ -170,6 +172,9 @@ const routeKeyMap: Record<string, string> = {
   PatientManagement: 'patients',
   ReferralManagement: 'referrals',
   DoctorTelemedicine: 'telemedicine',
+  DoctorTeachingList: 'teaching',
+  DoctorTeachingCreate: 'teaching',
+  DoctorTeachingDetail: 'teaching',
   DoctorStatistics: 'statistics'
 };
 
@@ -182,6 +187,7 @@ const selectedKeys = computed(() => {
   if (path.startsWith('/doctor/patients')) return ['patients'];
   if (path.startsWith('/doctor/referrals')) return ['referrals'];
   if (path.startsWith('/doctor/telemedicine')) return ['telemedicine'];
+  if (path.startsWith('/doctor/teaching')) return ['teaching'];
   if (path.startsWith('/doctor/statistics')) return ['statistics'];
   return ['dashboard'];
 });

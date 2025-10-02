@@ -34,6 +34,10 @@
             <IconMobile />
             <span>远程医疗调度</span>
           </a-menu-item>
+          <a-menu-item key="teaching" @click="navigate('/admin/teaching')">
+            <IconBook />
+            <span>远程教学调度</span>
+          </a-menu-item>
           <a-menu-item key="statistics" @click="navigate('/admin/statistics')">
             <IconBarChart />
             <span>统计分析</span>
@@ -90,6 +94,7 @@ import {
   IconMenuUnfold,
   IconUser,
   IconMobile,
+  IconBook,
   IconBarChart,
   IconDown,
   IconSettings,
@@ -116,6 +121,7 @@ const currentKey = computed(() => {
   if (path.includes('/admin/users')) return 'users';
   if (path.includes('/admin/hospitals')) return 'hospitals';
   if (path.includes('/admin/telemedicine')) return 'telemedicine';
+  if (path.includes('/admin/teaching')) return 'teaching';
   if (path.includes('/admin/statistics')) return 'statistics';
   return 'dashboard';
 });
@@ -126,6 +132,7 @@ const pageTitle = computed(() => {
     users: '用户管理',
     hospitals: '医院管理',
     telemedicine: '远程医疗调度',
+    teaching: '远程教学调度',
     statistics: '统计分析'
   };
   return map[currentKey.value] || '管理员后台';
@@ -158,6 +165,7 @@ void IconMenuFold;
 void IconMenuUnfold;
 void IconUser;
 void IconMobile;
+void IconBook;
 void IconBarChart;
 void IconDown;
 void IconSettings;

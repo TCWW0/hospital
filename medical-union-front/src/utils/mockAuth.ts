@@ -8,6 +8,7 @@ export interface MockUser {
   role: string;
   doctorRole?: 'community' | 'hospital';
   expertId?: string; // 医生的专家ID，可选
+  organizerId?: string; // 讲座模块中的发起人ID
 }
 
 // Mock 用户数据库
@@ -48,6 +49,7 @@ export const mockUsers: MockUser[] = [
     role: 'doctor',
     doctorRole: 'hospital',
     expertId: 'exp-001',
+    organizerId: 'doc-001'
   },
   {
     phone: 'DOC002', 
@@ -58,6 +60,7 @@ export const mockUsers: MockUser[] = [
     role: 'doctor',
     doctorRole: 'community',
     expertId: 'exp-002',
+    organizerId: 'doc-003'
   },
   {
     phone: 'DOC003',
@@ -68,6 +71,7 @@ export const mockUsers: MockUser[] = [
     role: 'doctor',
     doctorRole: 'hospital',
     expertId: 'exp-003',
+    organizerId: 'doc-006'
   },
   
   // 管理员账号
@@ -120,7 +124,8 @@ export function mockAuthLogin(phone: string, password: string, userType?: string
           phone: user.phone,
           name: user.name,
           doctorRole: user.doctorRole,
-          expertId: user.expertId
+          expertId: user.expertId,
+          organizerId: user.organizerId
         }
       });
     }, 800); // 模拟800ms网络延时

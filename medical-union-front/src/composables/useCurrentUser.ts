@@ -28,6 +28,8 @@ export interface NormalizedUser {
   expertId?: string;
   /** 所属机构/医院名称 */
   hospitalName?: string;
+  /** 远程教学等模块中的发起人标识 */
+  organizerId?: string;
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -89,6 +91,26 @@ function resolveExpertId(source: Record<string, unknown>): string | undefined {
   return undefined;
 }
 
+function resolveOrganizerId(source: Record<string, unknown>): string | undefined {
+  const direct = pickStringField(source, ['organizerId', 'organizerID', 'organizer_id']);
+  if (direct) return direct;
+
+  const nestedSources: Array<Record<string, unknown> | null> = [
+    parseObject(source.profileJson),
+    parseObject(source.profile),
+    parseObject(source.extra),
+    parseObject(source.metadata),
+    parseObject(source.details)
+  ];
+
+  for (const nested of nestedSources) {
+    const nestedMatch = pickStringField(nested, ['organizerId', 'organizerID', 'organizer_id', 'id']);
+    if (nestedMatch) return nestedMatch;
+  }
+
+  return undefined;
+}
+
 function coerceDoctorRole(value: unknown): DoctorRole | undefined {
   return value === 'community' || value === 'hospital' ? value : undefined;
 }
@@ -112,6 +134,7 @@ function normalizeUser(raw: unknown): NormalizedUser | null {
   const role = (source.role ?? source.userRole ?? source.user_type ?? '') as string | undefined;
   const doctorRole = coerceDoctorRole(source.doctorRole ?? source.roleTag ?? source.doctor_role);
   const expertId = resolveExpertId(source);
+  const organizerId = resolveOrganizerId(source);
 
   const hospitalName = (source.hospital ?? source.hospitalName ?? source.organization ?? source.orgName) as
     | string
@@ -127,7 +150,8 @@ function normalizeUser(raw: unknown): NormalizedUser | null {
     role: role?.toString(),
     doctorRole,
     expertId,
-    hospitalName
+    hospitalName,
+    organizerId
   };
 }
 
@@ -189,6 +213,7 @@ export interface DoctorProfile {
   name: string;
   expertId?: string;
   doctorRole?: DoctorRole;
+  organizerId?: string;
   hospital?: string;
   phone?: string;
 }
@@ -209,6 +234,7 @@ export function useCurrentUser() {
       name: currentUser.value.displayName,
       expertId: currentUser.value.expertId,
       doctorRole: currentUser.value.doctorRole,
+      organizerId: currentUser.value.organizerId,
       hospital: currentUser.value.hospitalName,
       phone: currentUser.value.phone
     };

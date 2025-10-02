@@ -50,6 +50,10 @@
             <IconCalendarClock />
             <span>我的预约</span>
           </a-menu-item>
+          <a-menu-item key="education" @click="$router.push('/patient/education')">
+            <IconBook />
+            <span>健康宣教</span>
+          </a-menu-item>
           <a-menu-item key="telemedicine" @click="$router.push('/patient/telemedicine/apply')">
             <IconMobile />
             <span>远程医疗</span>
@@ -123,6 +127,7 @@ import {
   IconBarChart,
   IconUserGroup,
   IconCalendarClock,
+  IconBook,
   IconMobile
 } from '@arco-design/web-vue/es/icon';
 
@@ -161,7 +166,9 @@ const MENU_KEY_BY_ROUTE: Record<string, string> = {
   MyAppointments: 'appointments',
   AppointmentConfirm: 'appointments',
   AppointmentVoucher: 'appointments',
-  TelemedicineApply: 'telemedicine'
+  TelemedicineApply: 'telemedicine',
+  PatientEducationCenter: 'education',
+  PatientEducationLectureDetail: 'education'
 };
 
 const currentRoute = computed(() => {
@@ -179,6 +186,7 @@ const currentRoute = computed(() => {
   if (path.includes('/hospital')) return 'hospital';
   if (path.includes('/doctors')) return 'doctors';
   if (path.includes('/appointments')) return 'appointments';
+  if (path.includes('/education')) return 'education';
   if (path.includes('/telemedicine')) return 'telemedicine';
   return 'dashboard';
 });
@@ -194,9 +202,11 @@ const currentRoute = computed(() => {
   titles.hospital = '医院';
   titles.doctors = '医生查询';
   titles.appointments = '我的预约';
+  titles.education = '健康宣教';
   titles.telemedicine = '远程医疗申请';
   // special case: appointment voucher
   if (route.path.includes('/patient/appointment/voucher')) return '预约凭证';
+  if (route.path.includes('/patient/education/')) return '健康宣教详情';
   // special case: visit detail
   if (route.path.includes('/patient/visit/')) return '就诊详情';
   return titles[currentRoute.value] || '个人中心';

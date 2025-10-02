@@ -75,6 +75,24 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: '远程医疗详情', requiresAuth: true, roles: ['DOCTOR'] }
       },
       {
+        path: 'teaching',
+        name: 'DoctorTeachingList',
+        component: () => import('@/views/doctor/teaching/LectureList.vue'),
+        meta: { title: '远程教学讲座', requiresAuth: true, roles: ['DOCTOR'] }
+      },
+      {
+        path: 'teaching/create',
+        name: 'DoctorTeachingCreate',
+        component: () => import('@/views/doctor/teaching/LectureCreate.vue'),
+        meta: { title: '发起远程教学讲座', requiresAuth: true, roles: ['DOCTOR'] }
+      },
+      {
+        path: 'teaching/:id',
+        name: 'DoctorTeachingDetail',
+        component: () => import('@/views/doctor/teaching/LectureDetail.vue'),
+        meta: { title: '讲座详情', requiresAuth: true, roles: ['DOCTOR'] }
+      },
+      {
         path: 'statistics',
         name: 'DoctorStatistics',
         component: () => import('@/views/doctor/Statistics.vue'),
@@ -223,6 +241,18 @@ const routes: Array<RouteRecordRaw> = [
         name: 'PatientTelemedicineDetail',
         component: () => import('@/views/patient/TelemedicineDetail.vue'),
         meta: { title: '远程医疗详情', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'education',
+        name: 'PatientEducationCenter',
+        component: () => import('@/views/patient/education/EducationCenter.vue'),
+        meta: { title: '健康宣教', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'education/:id',
+        name: 'PatientEducationLectureDetail',
+        component: () => import('@/views/patient/education/EducationLectureDetail.vue'),
+        meta: { title: '健康宣教详情', requiresAuth: true, roles: ['PATIENT'] }
       }
     ]
   },
@@ -282,6 +312,26 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/admin/TelemedicineDetail.vue'),
         meta: {
           title: '远程医疗详情',
+          requiresAuth: true,
+          roles: ['ADMIN']
+        }
+      },
+      {
+        path: 'teaching',
+        name: 'AdminTeachingBoard',
+        component: () => import('@/views/admin/teaching/LectureBoard.vue'),
+        meta: {
+          title: '远程教学调度',
+          requiresAuth: true,
+          roles: ['ADMIN']
+        }
+      },
+      {
+        path: 'teaching/:id',
+        name: 'AdminTeachingDetail',
+        component: () => import('@/views/admin/teaching/LectureDetail.vue'),
+        meta: {
+          title: '远程教学讲座详情',
           requiresAuth: true,
           roles: ['ADMIN']
         }

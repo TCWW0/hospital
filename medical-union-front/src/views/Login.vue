@@ -304,6 +304,12 @@ const handleSubmit = async (payload?: any) => {
             : {}),
           ...(typeof backendData.expertId === 'string'
             ? { expertId: backendData.expertId }
+            : {}),
+          ...(typeof backendData.user.organizerId === 'string'
+            ? { organizerId: backendData.user.organizerId }
+            : {}),
+          ...(typeof backendData.organizerId === 'string'
+            ? { organizerId: backendData.organizerId }
             : {})
         };
       } else {
@@ -320,6 +326,9 @@ const handleSubmit = async (payload?: any) => {
           doctorRole: normalizedDoctorRole,
           ...(typeof backendData.expertId === 'string'
             ? { expertId: backendData.expertId }
+            : {}),
+          ...(typeof backendData.organizerId === 'string'
+            ? { organizerId: backendData.organizerId }
             : {})
         };
       }

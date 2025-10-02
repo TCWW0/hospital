@@ -16,3 +16,5 @@ export {
   fetchPatients as fetchPatientsMock,
   fetchPatientById as fetchPatientByIdMock
 } from './mock/patients';
+
+export * from './mock/teaching';
