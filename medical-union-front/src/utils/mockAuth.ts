@@ -7,6 +7,7 @@ export interface MockUser {
   userId: number;
   role: string;
   doctorRole?: 'community' | 'hospital';
+  expertId?: string; // 医生的专家ID，可选
 }
 
 // Mock 用户数据库
@@ -42,28 +43,31 @@ export const mockUsers: MockUser[] = [
     phone: 'DOC001',
     password: 'doctor123',
     userType: 'DOCTOR',
-    name: '陈医生',
+    name: '周兰',
     userId: 20001,
     role: 'doctor',
-    doctorRole: 'hospital'
+    doctorRole: 'hospital',
+    expertId: 'exp-001',
   },
   {
     phone: 'DOC002', 
     password: 'password123',
     userType: 'DOCTOR',
-    name: '刘医生',
+    name: '李青',
     userId: 20002,
     role: 'doctor',
-    doctorRole: 'community'
+    doctorRole: 'community',
+    expertId: 'exp-002',
   },
   {
-    phone: 'MD001',
+    phone: 'DOC003',
     password: '123456',
     userType: 'DOCTOR',
-    name: '赵主任',
+    name: '王强',
     userId: 20003,
     role: 'doctor',
-    doctorRole: 'hospital'
+    doctorRole: 'hospital',
+    expertId: 'exp-003',
   },
   
   // 管理员账号
@@ -115,7 +119,8 @@ export function mockAuthLogin(phone: string, password: string, userType?: string
           userType: user.userType,
           phone: user.phone,
           name: user.name,
-          doctorRole: user.doctorRole
+          doctorRole: user.doctorRole,
+          expertId: user.expertId
         }
       });
     }, 800); // 模拟800ms网络延时

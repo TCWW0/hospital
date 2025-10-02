@@ -63,6 +63,18 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: '远程医疗申请', requiresAuth: true, roles: ['DOCTOR'] }
       },
       {
+        path: 'telemedicine/create',
+        name: 'DoctorTelemedicineCreate',
+        component: () => import('@/views/doctor/TelemedicineCreate.vue'),
+        meta: { title: '新建远程医疗申请', requiresAuth: true, roles: ['DOCTOR'] }
+      },
+      {
+        path: 'telemedicine/:id',
+        name: 'DoctorTelemedicineDetail',
+        component: () => import('@/views/doctor/TelemedicineDetail.vue'),
+        meta: { title: '远程医疗详情', requiresAuth: true, roles: ['DOCTOR'] }
+      },
+      {
         path: 'statistics',
         name: 'DoctorStatistics',
         component: () => import('@/views/doctor/Statistics.vue'),
@@ -205,6 +217,12 @@ const routes: Array<RouteRecordRaw> = [
         name: 'TelemedicineApply',
         component: () => import('@/views/patient/TelemedicineApply.vue'),
         meta: { title: '申请远程医疗', requiresAuth: true, roles: ['PATIENT'] }
+      },
+      {
+        path: 'telemedicine/:id',
+        name: 'PatientTelemedicineDetail',
+        component: () => import('@/views/patient/TelemedicineDetail.vue'),
+        meta: { title: '远程医疗详情', requiresAuth: true, roles: ['PATIENT'] }
       }
     ]
   },
@@ -244,6 +262,26 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/admin/HospitalManagement.vue'),
         meta: {
           title: '医院管理',
+          requiresAuth: true,
+          roles: ['ADMIN']
+        }
+      },
+      {
+        path: 'telemedicine',
+        name: 'AdminTelemedicineBoard',
+        component: () => import('@/views/admin/TelemedicineBoard.vue'),
+        meta: {
+          title: '远程医疗调度',
+          requiresAuth: true,
+          roles: ['ADMIN']
+        }
+      },
+      {
+        path: 'telemedicine/:id',
+        name: 'AdminTelemedicineDetail',
+        component: () => import('@/views/admin/TelemedicineDetail.vue'),
+        meta: {
+          title: '远程医疗详情',
           requiresAuth: true,
           roles: ['ADMIN']
         }

@@ -322,9 +322,6 @@ function sortReferrals(list: ReferralCase[]) {
       const oa = order[a.status];
       const ob = order[b.status];
       if (oa !== ob) return oa - ob;
-      const timeA = new Date(a.updatedAt || a.createdAt).getTime();
-      const timeB = new Date(b.updatedAt || b.createdAt).getTime();
-      if (timeA !== timeB) return timeB - timeA;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 }

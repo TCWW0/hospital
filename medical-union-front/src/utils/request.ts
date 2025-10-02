@@ -1,13 +1,14 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import type { ApiResponse } from '@/types';
+import { getApiBaseUrl, getApiTimeout } from '@/config/runtime';
 
 // 创建 axios 实例
 // 在开发环境中使用相对路径让 Vite 的 dev server 代理 (/api -> backend) 生效，避免跨域预检导致的 OPTIONS 403
-const devBase = import.meta.env.DEV ? '' : import.meta.env.VITE_API_BASE_URL;
+const resolvedBaseUrl = import.meta.env.DEV ? '' : getApiBaseUrl() || '';
 const instance: AxiosInstance = axios.create({
-  baseURL: devBase,
-  timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 10000,
+  baseURL: resolvedBaseUrl,
+  timeout: getApiTimeout(),
   headers: {
     'Content-Type': 'application/json',
   },

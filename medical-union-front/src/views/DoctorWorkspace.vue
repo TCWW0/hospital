@@ -20,49 +20,25 @@
           </div>
           <div class="hospital-body" v-if="!collapsed">
             <div class="hospital-name">{{ hospitalInfo?.hospitalName || '示例医院' }}</div>
-            <div class="hospital-stats">今日患者: {{ hospitalInfo?.todayPatients ?? 0 }}</div>
+            <!-- <div class="hospital-stats">今日患者: {{ hospitalInfo?.todayPatients ?? 0 }}</div> -->
           </div>
         </div>
         
         <a-menu 
-          :default-selected-keys="[currentRoute]"
+          :selected-keys="selectedKeys"
           :collapsed="collapsed"
           :style="{ height: 'calc(100vh - 64px)', borderRight: 0 }"
           mode="inline"
           theme="light"
           class="doctor-menu"
         >
-          <a-menu-item key="dashboard" @click="$router.push('/doctor')">
-            <IconHome />
-            <span>工作台首页</span>
-          </a-menu-item>
-          <a-menu-item key="patients" @click="$router.push('/doctor/patients')">
-            <IconUser />
-            <span>患者管理</span>
-          </a-menu-item>
-          <a-menu-item key="referrals" @click="$router.push('/doctor/referrals')">
-            <IconSwap />
-            <span>转诊管理</span>
-          </a-menu-item>
-          <a-menu-item key="hospitals" @click="$router.push('/patient/hospitals')">
-            <IconHome />
-            <span>医院列表</span>
-          </a-menu-item>
-          <a-menu-item key="doctors" @click="$router.push('/patient/doctors')">
-            <IconUser />
-            <span>医生查询</span>
-          </a-menu-item>
-          <a-menu-item key="appointments" @click="$router.push('/patient/appointments')">
-            <IconFile />
-            <span>我的预约</span>
-          </a-menu-item>
-          <a-menu-item key="telemedicine" @click="$router.push('/patient/telemedicine/apply')">
-            <IconHeart />
-            <span>远程医疗</span>
-          </a-menu-item>
-          <a-menu-item key="statistics" @click="$router.push('/doctor/statistics')">
-            <IconBarChart />
-            <span>数据统计</span>
+          <a-menu-item
+            v-for="item in menuItems"
+            :key="item.key"
+            @click="handleMenuClick(item)"
+          >
+            <component :is="item.icon" class="menu-icon" />
+            <span>{{ item.label }}</span>
           </a-menu-item>
         </a-menu>
       </a-layout-sider>
@@ -85,13 +61,6 @@
           <div class="header-right">
             <div class="role-switch">
               <span class="role-label">{{ roleLabel }}</span>
-              <a-segmented
-                class="role-segmented"
-                size="small"
-                :model-value="doctorRole"
-                :options="roleOptions"
-                @change="handleRoleChange"
-              />
             </div>
             <a-dropdown>
               <a-button type="text" class="user-info">
@@ -127,9 +96,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, type Component } from 'vue';
 import { mockDoctorDashboard } from '@/utils/mockData';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter, useRoute, type RouteLocationRaw } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import {
   IconHeart,
@@ -143,32 +112,30 @@ import {
   IconSettings,
   IconPoweroff
  } from '@arco-design/web-vue/es/icon';
- import { IconUserGroup, IconFile, IconMobile } from '@arco-design/web-vue/es/icon';
-import { useDoctorRole, type DoctorRole, resetDoctorRole } from '@/utils/doctorRole';
+import { useDoctorRole, resetDoctorRole } from '@/utils/doctorRole';
+import { useCurrentUser, clearCurrentUser } from '@/composables/useCurrentUser';
+
+type MenuItem = {
+  key: string;
+  label: string;
+  icon: Component;
+  to: RouteLocationRaw;
+};
 
 const router = useRouter();
 const route = useRoute();
 const collapsed = ref(false);
-const { role: doctorRole, isCommunityDoctor, setDoctorRole } = useDoctorRole();
-
-const roleOptions: Array<{ label: string; value: DoctorRole }> = [
-  { label: '社区医生', value: 'community' },
-  { label: '医院医生', value: 'hospital' }
-];
+const { role: doctorRole, isCommunityDoctor } = useDoctorRole();
+const { currentUser, isDoctor } = useCurrentUser();
 
 const roleLabel = computed(() =>
   doctorRole.value === 'community' ? '社区医生视角' : '医院医生视角'
 );
 
 const communityHospitalInfo = {
-  hospitalName: '朝阳社区卫生服务中心',
+  hospitalName: '吉大二院',
   todayPatients: 18
 };
-
-// ensure imported icons are referenced so TypeScript doesn't warn
-void IconUserGroup;
-void IconFile;
-void IconMobile;
 
 // 从 mockData 获取医院信息（临时）
 const hospitalInfo = computed(() => {
@@ -188,29 +155,45 @@ const hospitalInfo = computed(() => {
 });
 
 // 获取用户信息
-const userInfo = computed(() => {
-  try {
-    const user = localStorage.getItem('medical_union_user');
-    return user ? JSON.parse(user) : null;
-  } catch {
-    return null;
+const userInfo = computed(() => currentUser.value?.raw ?? null);
+
+const menuItems: MenuItem[] = [
+  { key: 'dashboard', label: '工作台首页', icon: IconHome, to: { name: 'DoctorDashboard' } },
+  { key: 'patients', label: '患者管理', icon: IconUser, to: { name: 'PatientManagement' } },
+  { key: 'referrals', label: '转诊管理', icon: IconSwap, to: { name: 'ReferralManagement' } },
+  { key: 'telemedicine', label: '远程医疗', icon: IconHeart, to: { name: 'DoctorTelemedicine' } },
+  { key: 'statistics', label: '数据统计', icon: IconBarChart, to: { name: 'DoctorStatistics' } }
+];
+
+const routeKeyMap: Record<string, string> = {
+  DoctorDashboard: 'dashboard',
+  PatientManagement: 'patients',
+  ReferralManagement: 'referrals',
+  DoctorTelemedicine: 'telemedicine',
+  DoctorStatistics: 'statistics'
+};
+
+const selectedKeys = computed(() => {
+  const name = route.name as string | undefined;
+  if (name && routeKeyMap[name]) {
+    return [routeKeyMap[name]];
   }
+  const path = route.path;
+  if (path.startsWith('/doctor/patients')) return ['patients'];
+  if (path.startsWith('/doctor/referrals')) return ['referrals'];
+  if (path.startsWith('/doctor/telemedicine')) return ['telemedicine'];
+  if (path.startsWith('/doctor/statistics')) return ['statistics'];
+  return ['dashboard'];
 });
 
-// 当前路由
-const currentRoute = computed(() => {
-  const path = route.path;
-  if (path === '/doctor') return 'dashboard';
-  if (path.includes('/patients')) return 'patients';
-  if (path.includes('/referrals')) return 'referrals';
-  if (path.includes('/statistics')) return 'statistics';
-  if (path.includes('/hospital')) return 'hospital';
-  return 'dashboard';
-});
+function handleMenuClick(item: MenuItem) {
+  if (!item) return;
+  router.push(item.to);
+}
 // 处理退出登录
 const handleLogout = () => {
   localStorage.removeItem('medical_union_token');
-  localStorage.removeItem('medical_union_user');
+  clearCurrentUser();
   resetDoctorRole();
   Message.success('已退出登录');
   router.push('/login');
@@ -225,14 +208,6 @@ const handleSettings = () => {
   Message.info('设置功能将在后续发布');
 };
 
-const handleRoleChange = (value: DoctorRole) => {
-  if (value === doctorRole.value) return;
-  setDoctorRole(value);
-  if (value === 'community' && route.path === '/doctor') {
-    router.push('/doctor/referrals');
-  }
-};
-
 watch(
   () => doctorRole.value,
   (value) => {
@@ -244,7 +219,7 @@ watch(
 
 onMounted(() => {
   // 检查用户权限
-  if (!userInfo.value || userInfo.value.userType !== 'DOCTOR') {
+  if (!isDoctor.value) {
     Message.error('权限不足');
     router.push('/login');
   }
@@ -402,20 +377,21 @@ onMounted(() => {
         color: #1f2937;
         font-weight: 600;
         
-        .arco-icon {
+        .menu-icon {
           color: #1f2937;
         }
       }
     }
     
-    .arco-icon {
+    .menu-icon {
       color: #6b7280;
       font-size: 20px;
       margin-right: 16px;
       flex-shrink: 0;
+      transition: color 0.2s ease;
     }
-    
-    .arco-menu-selected .arco-icon {
+
+    .arco-menu-item:hover .menu-icon {
       color: #1f2937;
     }
     
@@ -440,7 +416,7 @@ onMounted(() => {
         position: relative;
         flex-shrink: 0; // 防止压缩
         
-        .arco-icon {
+        .menu-icon {
           margin-right: 0;
           font-size: 20px; // 调整图标尺寸适配56px容器
           color: #6b7280;
@@ -449,7 +425,7 @@ onMounted(() => {
         &:hover {
           background-color: #f3f4f6;
           
-          .arco-icon {
+          .menu-icon {
             color: #1f2937;
           }
         }
@@ -458,7 +434,7 @@ onMounted(() => {
           background-color: #f3f4f6;
           border: 2px solid #d1d5db; // GPT风格的中性灰色边框
           
-          .arco-icon {
+          .menu-icon {
             color: #1f2937;
             font-size: 20px;
           }
@@ -585,7 +561,7 @@ onMounted(() => {
           margin: 6px 0;
           border-radius: 10px;
           
-          .arco-icon {
+          .menu-icon {
             font-size: 22px;
           }
         }
@@ -618,7 +594,7 @@ onMounted(() => {
           margin: 4px 0;
           border-radius: 8px;
           
-          .arco-icon {
+          .menu-icon {
             font-size: 20px;
           }
         }

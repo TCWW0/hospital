@@ -153,7 +153,9 @@ import {
   IconMobile
 } from '@arco-design/web-vue/es/icon';
 import { authApi } from '@/api';
-import { shouldUseMockAuth, mockAuthLogin } from '@/utils/mockAuth';
+import { shouldUseMockAuth } from '@/config/runtime';
+import { mockAuthLogin } from '@/api/mock/auth';
+import { setCurrentUser } from '@/composables/useCurrentUser';
 import type { LoginRequest } from '@/types';
 import { setDoctorRole, resetDoctorRole, type DoctorRole } from '@/utils/doctorRole';
 
@@ -292,12 +294,20 @@ const handleSubmit = async (payload?: any) => {
       token = backendData.token || findToken(backendData);
 
       if (backendData.user) {
-        const normalizedDoctorRole = pickDoctorRole(backendData.user) ?? pickDoctorRole(backendData);
+        const normalizedDoctorRole =
+          pickDoctorRole(backendData.user) ?? pickDoctorRole(backendData);
         userInfo = {
           ...backendData.user,
-          ...(normalizedDoctorRole ? { doctorRole: normalizedDoctorRole } : {})
+          ...(normalizedDoctorRole ? { doctorRole: normalizedDoctorRole } : {}),
+          ...(typeof backendData.user.expertId === 'string'
+            ? { expertId: backendData.user.expertId }
+            : {}),
+          ...(typeof backendData.expertId === 'string'
+            ? { expertId: backendData.expertId }
+            : {})
         };
       } else {
+        const normalizedDoctorRole = pickDoctorRole(backendData);
         userInfo = {
           id: backendData.userId,
           username: backendData.username,
@@ -307,7 +317,10 @@ const handleSubmit = async (payload?: any) => {
           profileJson: backendData.profileJson,
           name: backendData.name,
           phone: backendData.phone,
-          doctorRole: pickDoctorRole(backendData)
+          doctorRole: normalizedDoctorRole,
+          ...(typeof backendData.expertId === 'string'
+            ? { expertId: backendData.expertId }
+            : {})
         };
       }
 
@@ -316,13 +329,12 @@ const handleSubmit = async (payload?: any) => {
 
       if (!token) {
         console.error('登录失败：未能在后端响应中提取到 token，响应为：', response);
-        Message.error('登录失败：未返回认证 token，请检查后端返回格式（查看控制台）');
         return;
       }
 
-      // 存储用户信息和 token
-      localStorage.setItem('medical_union_token', token);
-      localStorage.setItem('medical_union_user', JSON.stringify(userInfo));
+  // 存储用户信息和 token
+  localStorage.setItem('medical_union_token', token);
+  setCurrentUser(userInfo);
 
       // 根据医生账号的 doctorRole 初始化视角
       if ((userInfo.userType || userInfo.role) === 'DOCTOR') {

@@ -1,5 +1,16 @@
 # Vue 3 + TypeScript + Vite
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Telemedicine mock data
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+The telemedicine module now persists demo data in `localStorage` under the key `telemedicine.apps.v1`. All CRUD operations flow through `src/api/mock/telemedicine.repository.ts`, which keeps the in-browser data store in sync and broadcasts changes across tabs via `BroadcastChannel` and `storage` events.
+
+- To reset the mock dataset, run in the browser console:
+
+	```js
+	localStorage.removeItem('telemedicine.apps.v1');
+	```
+
+- Any open telemedicine list or detail view auto-refreshes when another tab changes the data.
+
+The rest of the project continues to follow the standard Vue 3 + Vite setup. For IDE tips and TypeScript tooling guidance see the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+

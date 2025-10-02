@@ -144,14 +144,37 @@ const userInfo = computed(() => {
 });
 
 // 当前路由
+const MENU_KEY_BY_ROUTE: Record<string, string> = {
+  PatientDashboard: 'dashboard',
+  PatientProfile: 'profile',
+  PatientVisits: 'visits',
+  VisitDetail: 'visits',
+  PatientReferrals: 'referrals',
+  PatientReferralDetail: 'referrals',
+  HospitalList: 'hospital',
+  HospitalOverview: 'hospital',
+  HospitalDetail: 'hospital',
+  HospitalDepartmentIntro: 'hospital',
+  DoctorList: 'doctors',
+  DoctorDetail: 'doctors',
+  DoctorSchedule: 'doctors',
+  MyAppointments: 'appointments',
+  AppointmentConfirm: 'appointments',
+  AppointmentVoucher: 'appointments',
+  TelemedicineApply: 'telemedicine'
+};
+
 const currentRoute = computed(() => {
+  const name = route.name ? String(route.name) : '';
+  if (name && MENU_KEY_BY_ROUTE[name]) {
+    return MENU_KEY_BY_ROUTE[name];
+  }
   const path = route.path;
   if (path === '/patient') return 'dashboard';
-  // 访问就诊详情页时，仍归类为“就诊记录”高亮
   if (path.includes('/visit/')) return 'visits';
   if (path.includes('/profile')) return 'profile';
   if (path.includes('/visits')) return 'visits';
-  if (path.includes('/referral/')) return 'referrals';
+  if (path.includes('/referral')) return 'referrals';
   if (path.includes('/referrals')) return 'referrals';
   if (path.includes('/hospital')) return 'hospital';
   if (path.includes('/doctors')) return 'doctors';

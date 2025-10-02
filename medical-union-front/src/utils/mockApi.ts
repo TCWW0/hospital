@@ -1,5 +1,6 @@
 import type { LoginRequest, LoginResponse, ApiResponse, UserType } from '@/types';
 import { mockUsers, mockPatients, mockReferrals, mockDoctorDashboard, mockPatientDashboard } from './mockData';
+import { shouldUseMockApi } from '@/config/runtime';
 
 // 模拟 API 延迟
 const delay = (ms: number = 1000) => new Promise(resolve => setTimeout(resolve, ms));
@@ -124,14 +125,4 @@ export const mockGetPatientDashboard = async (patientId?: number): Promise<ApiRe
 };
 
 // 判断是否使用 Mock 数据
-export const shouldUseMock = (): boolean => {
-  // 多种方式控制是否使用 Mock:
-  // 1. 环境变量 VITE_USE_MOCK_API=true 强制使用 mock
-  // 2. localStorage 中的设置
-  // 3. 如果没有配置后端地址，默认使用 mock
-  // 4. 开发环境且未明确启用真实 API
-  return import.meta.env.VITE_USE_MOCK_API === 'true' || 
-         localStorage.getItem('medical_union_use_mock') === 'true' ||
-         !import.meta.env.VITE_API_BASE_URL ||
-         (import.meta.env.DEV && !import.meta.env.VITE_USE_REAL_API);
-};
+export const shouldUseMock = (): boolean => shouldUseMockApi();
