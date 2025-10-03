@@ -20,129 +20,134 @@
       </template>
     </a-page-header>
 
-    <div class = "detail-body">
-        <a-spin :loading="loading">
-            <template #element>
-                <div v-if="lecture" class="detail-content scrollable">
-                    <a-card :bordered="false" class="summary-card">
-                        <div class="summary-head">
-                        <div class="summary-title">
-                            <h2>{{ lecture.title }}</h2>
-                            <a-tag :color="stageStyle(lecture.stage).color" :style="{ backgroundColor: stageStyle(lecture.stage).bg, border: 'none' }">
-                            {{ stageLabel(lecture.stage) }}
-                            </a-tag>
-                            <a-tag :color="statusStyle(lecture.status).color" :style="{ backgroundColor: statusStyle(lecture.status).bg, border: 'none' }">
-                            {{ statusLabel(lecture.status) }}
-                            </a-tag>
-                        </div>
-                        <p class="muted">{{ lecture.summary }}</p>
-                        <a-descriptions :column="2">
-                            <a-descriptions-item label="讲座类型">{{ categoryLabel(lecture.category) }}</a-descriptions-item>
-                            <a-descriptions-item label="目标人群">{{ audienceLabel(lecture.targetAudience) }}</a-descriptions-item>
-                            <a-descriptions-item label="可见范围">{{ lectureVisibilityLabel(lecture.visibility) }}</a-descriptions-item>
-                            <a-descriptions-item label="计划时间">{{ formatDateTime(lecture.plannedAt) }}</a-descriptions-item>
-                            <a-descriptions-item label="预计时长">{{ lecture.durationMinutes || 60 }} 分钟</a-descriptions-item>
-                            <a-descriptions-item label="发起人">{{ lecture.organizerName }}（{{ lecture.organizerHospital }}）</a-descriptions-item>
-                            <a-descriptions-item label="主讲专家">{{ lecture.lecturer.name }} · {{ lecture.lecturer.title || '职称待定' }}</a-descriptions-item>
-                        </a-descriptions>
-                        </div>
-                    </a-card>
-
-                    <div class="grid-columns">
-                        <a-card class="column-card" title="直播信息" :bordered="false">
-                        <template v-if="lecture.session">
-                            <p><strong>直播时间：</strong>{{ formatDateTime(lecture.session.scheduledAt) }}</p>
-                            <p><strong>直播平台：</strong>{{ lecture.session.livestreamProvider || '待定' }}</p>
-                            <p v-if="lecture.session.meetingUrl"><strong>链接：</strong>{{ lecture.session.meetingUrl }}</p>
-                            <p v-if="lecture.session.accessCode"><strong>访问码：</strong>{{ lecture.session.accessCode }}</p>
-                            <p v-if="lecture.session.host"><strong>主持人：</strong>{{ lecture.session.host }}</p>
-                        </template>
-                        <div v-else class="muted">尚未设置直播信息。</div>
-                        </a-card>
-
-                        <a-card class="column-card" title="开课通知" :bordered="false">
-                        <template v-if="lecture.notice">
-                            <p><strong>发布渠道：</strong>{{ channelLabel(lecture.notice.channel) }}</p>
-                            <p><strong>发布人：</strong>{{ lecture.notice.publishedBy }}</p>
-                            <p><strong>发布时间：</strong>{{ formatDateTime(lecture.notice.publishedAt) }}</p>
-                            <p><strong>面向对象：</strong>{{ audienceLabel(lecture.notice.audience) }}</p>
-                            <p class="muted">{{ lecture.notice.summary }}</p>
-                        </template>
-                        <div v-else class="muted">待发布通知。</div>
-                        </a-card>
+    <div class="detail-body">
+      <a-spin :loading="loading">
+        <template #element>
+          <div v-if="lecture" class="detail-main">
+            <div class="detail-scroll">
+              <div class="detail-content">
+                <a-card :bordered="false" class="summary-card">
+                  <div class="summary-head">
+                    <div class="summary-title">
+                      <h2>{{ lecture.title }}</h2>
+                      <a-tag :color="stageStyle(lecture.stage).color" :style="{ backgroundColor: stageStyle(lecture.stage).bg, border: 'none' }">
+                        {{ stageLabel(lecture.stage) }}
+                      </a-tag>
+                      <a-tag :color="statusStyle(lecture.status).color" :style="{ backgroundColor: statusStyle(lecture.status).bg, border: 'none' }">
+                        {{ statusLabel(lecture.status) }}
+                      </a-tag>
                     </div>
+                    <p class="muted">{{ lecture.summary }}</p>
+                    <a-descriptions :column="2">
+                      <a-descriptions-item label="讲座类型">{{ categoryLabel(lecture.category) }}</a-descriptions-item>
+                      <a-descriptions-item label="目标人群">{{ audienceLabel(lecture.targetAudience) }}</a-descriptions-item>
+                      <a-descriptions-item label="可见范围">{{ lectureVisibilityLabel(lecture.visibility) }}</a-descriptions-item>
+                      <a-descriptions-item label="计划时间">{{ formatDateTime(lecture.plannedAt) }}</a-descriptions-item>
+                      <a-descriptions-item label="预计时长">{{ lecture.durationMinutes || 60 }} 分钟</a-descriptions-item>
+                      <a-descriptions-item label="发起人">{{ lecture.organizerName }}（{{ lecture.organizerHospital }}）</a-descriptions-item>
+                      <a-descriptions-item label="主讲专家">{{ lecture.lecturer.name }} · {{ lecture.lecturer.title || '职称待定' }}</a-descriptions-item>
+                    </a-descriptions>
+                  </div>
+                </a-card>
 
-                    <a-card class="column-card" title="身份验证记录" :bordered="false">
-                        <a-empty v-if="!lecture.verificationRecords.length" description="尚无验证记录" />
-                        <a-timeline v-else>
-                        <a-timeline-item v-for="item in lecture.verificationRecords" :key="item.id" :label="formatDateTime(item.createdAt)">
-                            <div class="timeline-entry">
-                            <strong>{{ verificationPhaseLabel(item.phase) }}</strong>
-                            <div class="muted">{{ verificationOutcomeLabel(item.status) }} · {{ item.note || '无备注' }}</div>
-                            </div>
-                        </a-timeline-item>
-                        </a-timeline>
-                    </a-card>
+                <div class="grid-columns">
+                  <a-card class="column-card" title="直播信息" :bordered="false">
+                    <template v-if="lecture.session">
+                      <p><strong>直播时间：</strong>{{ formatDateTime(lecture.session.scheduledAt) }}</p>
+                      <p><strong>直播平台：</strong>{{ lecture.session.livestreamProvider || '待定' }}</p>
+                      <p v-if="lecture.session.meetingUrl"><strong>链接：</strong>{{ lecture.session.meetingUrl }}</p>
+                      <p v-if="lecture.session.accessCode"><strong>访问码：</strong>{{ lecture.session.accessCode }}</p>
+                      <p v-if="lecture.session.host"><strong>主持人：</strong>{{ lecture.session.host }}</p>
+                    </template>
+                    <div v-else class="muted">尚未设置直播信息。</div>
+                  </a-card>
 
-                    <a-card class="column-card" title="参与人员" :bordered="false">
-                        <a-table
-                        :data="lecture.participants"
-                        :columns="participantColumns"
-                        :pagination="false"
-                        size="small"
-                        >
-                        <template #verifiedPhases="{ record }">
-                            <a-space wrap>
-                            <a-tag v-if="!record.verifiedPhases.length" type="outline">未验证</a-tag>
-                            <a-tag v-for="phase in record.verifiedPhases" :key="phase" type="primary">
-                                {{ verificationPhaseLabel(phase) }}
-                            </a-tag>
-                            </a-space>
-                        </template>
-                        <template #verificationStatus="{ record }">
-                            <a-tag :color="record.verificationStatus === 'passed' ? 'arcoblue' : record.verificationStatus === 'failed' ? 'red' : 'orange'">
-                            {{ verificationOutcomeLabel(record.verificationStatus) }}
-                            </a-tag>
-                        </template>
-                        </a-table>
-                    </a-card>
-
-                    <a-card class="column-card" title="资料与附件" :bordered="false">
-                        <a-table :data="lecture.materials" :pagination="false" size="small">
-                        <template #columns>
-                            <a-table-column title="名称" data-index="name" />
-                            <a-table-column title="类型" data-index="type" />
-                            <a-table-column title="受众" data-index="audience">
-                            <template #cell="{ record }">
-                                {{ audienceLabel(record.audience) }}
-                            </template>
-                            </a-table-column>
-                            <a-table-column title="上传时间" data-index="uploadedAt">
-                            <template #cell="{ record }">
-                                {{ formatDateTime(record.uploadedAt) }}
-                            </template>
-                            </a-table-column>
-                        </template>
-                        </a-table>
-                    </a-card>
-
-                    <a-card class="column-card" title="处理轨迹" :bordered="false">
-                        <a-timeline v-if="lecture.history.length" mode="left">
-                        <a-timeline-item v-for="item in lecture.history" :key="item.id" :label="formatDateTime(item.at)">
-                            <div class="timeline-entry">
-                            <strong>{{ item.actor }}</strong>
-                            <div class="muted">{{ item.action }}</div>
-                            </div>
-                        </a-timeline-item>
-                        </a-timeline>
-                        <a-empty v-else description="暂无历史记录" />
-                    </a-card>
+                  <a-card class="column-card" title="开课通知" :bordered="false">
+                    <template v-if="lecture.notice">
+                      <p><strong>发布渠道：</strong>{{ channelLabel(lecture.notice.channel) }}</p>
+                      <p><strong>发布人：</strong>{{ lecture.notice.publishedBy }}</p>
+                      <p><strong>发布时间：</strong>{{ formatDateTime(lecture.notice.publishedAt) }}</p>
+                      <p><strong>面向对象：</strong>{{ audienceLabel(lecture.notice.audience) }}</p>
+                      <p class="muted">{{ lecture.notice.summary }}</p>
+                    </template>
+                    <div v-else class="muted">待发布通知。</div>
+                  </a-card>
                 </div>
-                <a-empty v-else description="未找到讲座" />
+
+                <a-card class="column-card" title="身份验证记录" :bordered="false">
+                  <a-empty v-if="!lecture.verificationRecords.length" description="尚无验证记录" />
+                  <a-timeline v-else>
+                    <a-timeline-item v-for="item in lecture.verificationRecords" :key="item.id" :label="formatDateTime(item.createdAt)">
+                      <div class="timeline-entry">
+                        <strong>{{ verificationPhaseLabel(item.phase) }}</strong>
+                        <div class="muted">{{ verificationOutcomeLabel(item.status) }} · {{ item.note || '无备注' }}</div>
+                      </div>
+                    </a-timeline-item>
+                  </a-timeline>
+                </a-card>
+
+                <a-card class="column-card" title="参与人员" :bordered="false">
+                  <a-table
+                    :data="lecture.participants"
+                    :columns="participantColumns"
+                    :pagination="false"
+                    size="small"
+                  >
+                    <template #verifiedPhases="{ record }">
+                      <a-space wrap>
+                        <a-tag v-if="!record.verifiedPhases.length" type="outline">未验证</a-tag>
+                        <a-tag v-for="phase in record.verifiedPhases" :key="phase" type="primary">
+                          {{ verificationPhaseLabel(phase) }}
+                        </a-tag>
+                      </a-space>
+                    </template>
+                    <template #verificationStatus="{ record }">
+                      <a-tag :color="record.verificationStatus === 'passed' ? 'arcoblue' : record.verificationStatus === 'failed' ? 'red' : 'orange'">
+                        {{ verificationOutcomeLabel(record.verificationStatus) }}
+                      </a-tag>
+                    </template>
+                  </a-table>
+                </a-card>
+
+                <a-card class="column-card" title="资料与附件" :bordered="false">
+                  <a-table :data="lecture.materials" :pagination="false" size="small">
+                    <template #columns>
+                      <a-table-column title="名称" data-index="name" />
+                      <a-table-column title="类型" data-index="type" />
+                      <a-table-column title="受众" data-index="audience">
+                        <template #cell="{ record }">
+                          {{ audienceLabel(record.audience) }}
+                        </template>
+                      </a-table-column>
+                      <a-table-column title="上传时间" data-index="uploadedAt">
+                        <template #cell="{ record }">
+                          {{ formatDateTime(record.uploadedAt) }}
+                        </template>
+                      </a-table-column>
+                    </template>
+                  </a-table>
+                </a-card>
+
+                <a-card class="column-card" title="处理轨迹" :bordered="false">
+                  <a-timeline v-if="lecture.history.length" mode="left">
+                    <a-timeline-item v-for="item in lecture.history" :key="item.id" :label="formatDateTime(item.at)">
+                      <div class="timeline-entry">
+                        <strong>{{ item.actor }}</strong>
+                        <div class="muted">{{ item.action }}</div>
+                      </div>
+                    </a-timeline-item>
+                  </a-timeline>
+                  <a-empty v-else description="暂无历史记录" />
+                </a-card>
 
                 <div class="spring"></div>
-            </template>
-        </a-spin>
+              </div>
+            </div>
+          </div>
+          <a-empty v-else description="未找到讲座" />
+        </template>
+      </a-spin>
+    </div>
 
     <a-modal v-model:visible="noticeVisible" title="发布开课通知" @ok="submitNotice" :confirm-loading="modalLoading">
       <a-form :model="noticeForm" layout="vertical">
@@ -183,7 +188,6 @@
         </a-form-item>
       </a-form>
     </a-modal>
-    </div>
   </div>
 </template>
 
@@ -510,36 +514,43 @@ loadLecture();
     display: flex;
     flex-direction: column;
     background: transparent;
-    overflow-y: auto;
     flex: 1;
+    min-height: 0;
+    gap: 0;
+  }
+
+  .detail-main {
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+  }
+
+  .detail-scroll {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding-right: 12px;
+    min-height: 200px;
+    max-height: calc(100vh - 200px);
+  }
+
+  .detail-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .detail-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
   }
 
   .detail-content {
     display: flex;
     flex-direction: column;
     gap: 16px;
-  }
 
-  .detail-content.scrollable {
-    width: 100%;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    max-height: var(--teaching-scroll-height); 
-    padding-right: 8px; 
-
-    > *{
-        width: 100%;
+    > * {
+      width: 100%;
     }
   }
-
-      .detail-content.scrollable::-webkit-scrollbar {
-    width: 6px;
-    }
-    .detail-content.scrollable::-webkit-scrollbar-thumb {
-    background-color: rgba(0,0,0,0.2);
-    border-radius: 3px;
-    }
 
   .summary-card {
     border-radius: 12px;

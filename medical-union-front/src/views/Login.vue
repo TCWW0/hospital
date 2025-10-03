@@ -125,10 +125,10 @@
               <div class="mock-accounts">
                 <p class="mock-title">测试账号：</p>
                 <div class="mock-account-list">
-                  <p><code>患者：13800138000 / password123</code></p>
-                  <p><code>医院医生：DOC001 / doctor123</code></p>
-                  <p><code>社区医生：DOC002 / password123</code></p>
-                  <p><code>管理员：ADMIN001 / admin123</code></p>
+                  <p><code>患者：13800138000/ password123</code></p>
+                  <p><code>医院医生：DOC001/ doctor123</code></p>
+                  <p><code>社区医生：DOC002/ password123</code></p>
+                  <p><code>管理员：ADMIN001/ admin123</code></p>
                 </div>
               </div>
             </div>
@@ -176,17 +176,38 @@ const loginForm = reactive<LoginRequest>({
 });
 
 // 动态 label / placeholder
-const phoneLabel = computed(() => (loginForm.userType === 'DOCTOR' ? '工号' : '手机号'));
-const phonePlaceholder = computed(() => (loginForm.userType === 'DOCTOR' ? '请输入工号' : '请输入手机号'));
+const phoneLabel = computed(() => {
+  if (loginForm.userType === 'DOCTOR') return '工号';
+  if (loginForm.userType === 'ADMIN') return '工号';
+  return '手机号';
+});
+const phonePlaceholder = computed(() => {
+  if (loginForm.userType === 'DOCTOR') return '请输入工号';
+  if (loginForm.userType === 'ADMIN') return '请输入工号';
+  return '请输入手机号';
+});
 
 // 表单验证规则（根据用户类型动态返回）
 const rules = computed(() => {
-  const phoneRule = loginForm.userType === 'DOCTOR'
-    ? [{ required: true, message: '请输入工号' }]
-    : [
-        { required: true, message: '请输入手机号' },
-        { match: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式' }
-      ];
+  let phoneRule;
+
+  if (loginForm.userType === 'DOCTOR') {
+    phoneRule = [
+      { required: true, message: '请输入工号' },
+      { match: /^[a-zA-Z0-9]{4,}$/, message: '工号只能包含字母和数字，且至少 4 位' }
+    ];
+  } else if (loginForm.userType === 'ADMIN') {
+    phoneRule = [
+      { required: true, message: '请输入工号' },
+      { match: /^[a-zA-Z0-9]{4,}$/, message: '工号只能包含字母和数字，且至少 4 位' }
+    ];
+  } else {
+    // PATIENT
+    phoneRule = [
+      { required: true, message: '请输入手机号' },
+      { match: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式' }
+    ];
+  }
 
   return {
     phone: phoneRule,
@@ -199,6 +220,7 @@ const rules = computed(() => {
     ]
   };
 });
+
 
 // 处理登录
 const handleSubmit = async (payload?: any) => {

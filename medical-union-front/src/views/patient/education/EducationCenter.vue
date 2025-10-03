@@ -186,7 +186,6 @@ function formatDate(value?: string) {
 const visibleLectures = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase();
   return rawLectures.value
-    .filter((item) => item.visibility === 'public')
     .filter((item) => !hiddenStages.has(item.stage))
     .filter((item) => !categoryFilter.value || item.category === categoryFilter.value)
     .filter((item) => {

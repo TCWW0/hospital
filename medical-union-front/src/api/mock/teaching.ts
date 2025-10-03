@@ -106,20 +106,35 @@ function canViewerAccessLecture(lecture: TeachingLecture, viewer?: LectureViewer
 
   const viewerOrganization = normalizeOrganization(viewer.organization);
   const organizerOrganization = normalizeOrganization(lecture.organizerHospital);
+  const isSameOrganization = Boolean(viewerOrganization && organizerOrganization && viewerOrganization === organizerOrganization);
+  const targetsPatients = lecture.targetAudience === 'patients' || lecture.targetAudience === 'mixed';
+  const noticeTargetsPatients = lecture.notice?.audience === 'patients' || lecture.notice?.audience === 'mixed';
 
-  if (viewerOrganization && organizerOrganization && viewerOrganization === organizerOrganization) {
+  if (isSameOrganization && rules.sameOrganization) {
     return rules.sameOrganization;
   }
+  switch (viewer.role) {
+    case 'patient': {
+      if (rules.public) return true;
 
-  if (viewer.role === 'doctor' || viewer.role === 'nurse') {
-    return rules.networkDoctors;
+      if (targetsPatients || noticeTargetsPatients) {
+        if (lecture.visibility === 'network') {
+          return true;
+        }
+
+        if (lecture.visibility === 'internal' && rules.sameOrganization && isSameOrganization) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+    case 'doctor':
+    case 'nurse':
+      return rules.networkDoctors;
+    default:
+      return rules.public;
   }
-
-  if (viewer.role === 'patient') {
-    return rules.public;
-  }
-
-  return rules.public;
 }
 
 function clone<T>(value: T): T {

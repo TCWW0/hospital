@@ -1,21 +1,22 @@
 <template>
-  <div class="admin-panel">
+  <div class="admin-panel mu-app-shell">
     <a-layout>
       <a-layout-sider
-        :collapsed-width="92"
+        :collapsed-width="95"
         :collapsed="collapsed"
         collapsible
         :width="248"
-        class="layout-sider"
+        :class="['mu-layout-sider', 'admin-sider']"
       >
         <div class="logo" @click="navigate('/admin')">
           <IconHeart class="logo-icon" />
           <span v-if="!collapsed" class="logo-text">医联体 · 管理中心</span>
         </div>
         <a-menu
-          class="admin-menu"
+          class="mu-menu"
           :selected-keys="[currentKey]"
           :collapsed="collapsed"
+          :style="{ height: 'calc(100vh - 64px)', borderRight: 0 }"
           mode="inline"
         >
           <a-menu-item key="dashboard" @click="navigate('/admin')">
@@ -46,7 +47,7 @@
       </a-layout-sider>
 
       <a-layout>
-        <a-layout-header class="layout-header">
+        <a-layout-header class="mu-layout-header admin-header">
           <div class="header-left">
             <a-button type="text" class="collapse-btn" @click="toggleCollapse">
               <IconMenuUnfold v-if="collapsed" />
@@ -75,7 +76,7 @@
           </div>
         </a-layout-header>
 
-        <a-layout-content class="layout-content">
+        <a-layout-content class="mu-layout-content admin-content">
           <router-view :key="$route.fullPath" />
         </a-layout-content>
       </a-layout>
@@ -172,22 +173,64 @@ void IconSettings;
 void IconPoweroff;
 </script>
 
-<style scoped>
-.admin-panel { height: 100%; min-height: 100vh; }
-.layout-sider { background: #fff; box-shadow: 2px 0 8px rgba(15, 23, 42, 0.08); z-index: 1; }
-.logo { display:flex; align-items:center; gap:10px; padding:18px 20px; cursor:pointer; border-bottom:1px solid rgba(15,23,42,0.06); }
-.logo-icon{ font-size:20px; color:#165dff }
-.logo-text{ font-weight:700; font-size:15px; color:#0f172a }
-.admin-menu { border-right: none; height: calc(100vh - 80px); padding-top:12px; }
-.layout-header { display:flex; align-items:center; justify-content:space-between; padding:0 24px; background:#ffffff; box-shadow:0 2px 12px rgba(15,23,42,0.08); position:sticky; top:0; z-index:2; }
-.collapse-btn { color:#0f172a }
-.page-title { font-size:18px; font-weight:700; color:#0f172a; margin-left:12px }
-.layout-content { padding:24px; min-height: calc(100vh - 64px); background:#f6f8fb }
-.user-info { display:flex; align-items:center; gap:8px; color:#0f172a }
-.username { font-weight:600 }
-.header-right :deep(.arco-dropdown-option) { min-width:140px }
-@media (max-width: 960px) {
-  .layout-content { padding:16px }
-  .logo-text { display:none }
+<style lang="less" scoped>
+.admin-panel {
+  min-height: 100vh;
+
+  .admin-sider {
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid #e5e7eb;
+
+      .logo-icon {
+        font-size: 24px;
+        color: #10b981;
+      }
+
+      .logo-text {
+        font-weight: 600;
+        font-size: 18px;
+        color: #1f2937;
+      }
+    }
+  }
+
+  .admin-header {
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-left: 12px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #6b7280;
+
+      .username {
+        font-weight: 500;
+      }
+    }
+  }
+
+  .admin-content {
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: @screen-md) {
+  .admin-panel {
+    .admin-header {
+      .page-title {
+        font-size: 16px;
+      }
+    }
+  }
 }
 </style>
